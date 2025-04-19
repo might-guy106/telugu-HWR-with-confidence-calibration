@@ -101,7 +101,7 @@ class PARSeqTrainer(BaseTrainer):
 
         # Best model tracking
         best_val_loss = float('inf')
-        best_val_acc = 0.0
+        best_val_cer = float('inf')
 
         # Start timer
         self.start_time = time.time()
@@ -178,19 +178,19 @@ class PARSeqTrainer(BaseTrainer):
                 )
                 logger.info(f"Saved best loss model with val_loss: {val_loss:.4f}")
 
-            # Save best model based on validation accuracy
-            if metrics['accuracy'] > best_val_acc:
-                best_val_acc = metrics['accuracy']
+            # Save best model based on validation CER
+            if metrics['character_error_rate'] < best_val_cer:
+                best_val_cer = metrics['character_error_rate']
                 self.save_checkpoint(
                     epoch=epoch,
                     optimizer=optimizer,
                     metrics=metrics,
-                    filename="best_acc_model.pth"
+                    filename="best_cer_model.pth"
                 )
-                logger.info(f"Saved best accuracy model with val_acc: {metrics['accuracy']:.2f}%")
+                logger.info(f"Saved best CER model with val_cer: {metrics['character_error_rate']:.2f}%")
 
             # Save regular checkpoint
-            if (epoch + 1) % 5 == 0 or epoch == epochs - 1:
+            if (epoch + 1) % 2 == 0 or epoch == epochs - 1:
                 self.save_checkpoint(
                     epoch=epoch,
                     optimizer=optimizer,

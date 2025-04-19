@@ -96,15 +96,16 @@ python scripts/train_parseq.py \
     --data_root "/home/pankaj/Desktop/698r project/datasets/telugu datset" \
     --train_file train.txt \
     --val_file val.txt \
+    --vocab_file ../output/vocabulary.txt \
     --output_dir ../output/parseq \
-    --max_samples 1000 \
-    --val_samples 200 \
+    --max_samples 100 \
+    --val_samples 20 \
     --img_height 32 \
     --img_width 128 \
     --max_length 35 \
     --num_permutations 6 \
     --batch_size 32 \
-    --epochs 1 \
+    --epochs 5 \
     --learning_rate 0.0007 \
     --cuda
 ```

@@ -1,5 +1,9 @@
-import torch
 import os
+import sys
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+sys.path.insert(0, project_root)
+import torch
 import logging
 from torch.utils.data import DataLoader
 
@@ -24,11 +28,11 @@ def main():
     logger.info(f"Using device: {device}")
 
     # Settings
-    data_root = "/path/to/your/data"  # Update this path
+    data_root = "/home/pankaj/Desktop/698r project/datasets/telugu datset"  # Update this path
     img_height = 64
     img_width = 256
     batch_size = 32
-    vocab_file = "path/to/vocabulary.txt"  # Update this path
+    vocab_file = "/home/pankaj/Desktop/698r project/my implementations/output/vocabulary.txt"  # Update this path
 
     # Create transforms
     train_transform = get_transforms('train', img_height, img_width)

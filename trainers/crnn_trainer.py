@@ -149,6 +149,7 @@ class CRNNTrainer(BaseTrainer):
                     metrics=metrics,
                     filename="best_loss_model.pth"
                 )
+                logger.info(f"Saved best loss model with val_loss: {val_loss:.4f}")
 
             # Save best model based on CER
             if metrics['character_error_rate'] < best_cer:
@@ -159,6 +160,7 @@ class CRNNTrainer(BaseTrainer):
                     metrics=metrics,
                     filename="best_cer_model.pth"
                 )
+                logger.info(f"Saved best CER model with val_cer: {metrics['character_error_rate']:.2f}%")
 
         # Save final model
         self.save_checkpoint(
