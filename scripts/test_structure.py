@@ -92,7 +92,7 @@ def main():
         model=model,
         device=device,
         converter=converter,
-        save_dir='./test_checkpoints'
+        save_dir='../output/test_checkpoints'
     )
 
     # Run a tiny training job to test
