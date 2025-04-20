@@ -31,7 +31,7 @@ class PARSeqTrainer(BaseTrainer):
         # Create loss function with label smoothing
         self.criterion = PARSeqLoss(ignore_index=tokenizer.pad_id, label_smoothing=0.1)
 
-    def train(self, train_loader, val_loader, epochs=30, lr=0.0007, weight_decay=0.0001):
+    def train(self, train_loader, val_loader, epochs=30, lr=0.0007, weight_decay=0.0001, validate_every=5):
         """Train the PARSeq model."""
         self.model = self.model.to(self.device)
 
@@ -151,8 +151,10 @@ class PARSeqTrainer(BaseTrainer):
             self.history['train_loss'].append(train_loss)
             self.history['learning_rates'].append(scheduler.get_last_lr()[0])
 
-            # Validation
-            if valid_batches > 0:
+            # Validation phase (now conditional)
+            do_validation = (epoch % validate_every == 0) or (epoch == epochs-1)
+
+            if do_validation:
                 val_loss, metrics = self.validate(val_loader)
 
                 self.history['val_loss'].append(val_loss)
@@ -186,15 +188,17 @@ class PARSeqTrainer(BaseTrainer):
                         metrics=metrics,
                         filename="best_cer_model.pth"
                     )
+            else:
+                # Skip validation this epoch
+                logger.info(f"Epoch {epoch+1}/{epochs} - Train Loss: {train_loss:.4f} (validation skipped)")
 
-                # Save checkpoint every few epochs
-                if (epoch + 1) % 5 == 0 or epoch == epochs - 1:
-                    self.save_checkpoint(
-                        epoch=epoch,
-                        optimizer=optimizer,
-                        metrics=metrics,
-                        filename=f"checkpoint_epoch_{epoch+1}.pth"
-                    )
+                # Use previous values for history (optional)
+                if self.history['val_loss']:
+                    self.history['val_loss'].append(self.history['val_loss'][-1])
+                    self.history['val_cer'].append(self.history['val_cer'][-1])
+                    self.history['val_wer'].append(self.history['val_wer'][-1])
+                    self.history['val_acc'].append(self.history['val_acc'][-1])
+
 
         # Final save
         self.save_checkpoint(
