@@ -697,13 +697,15 @@ class PARSeq(nn.Module):
         max_seq_len: int = 35,
         num_permutations: int = 6,
         dropout: float = 0.1,
-        sos_idx: int = 0
+        sos_idx: int = 1,  # Change default from 0 to 1
+        pad_idx: int = 0   # Set padding token to blank token
     ):
         super().__init__()
 
         self.vocab_size = vocab_size
         self.max_seq_len = max_seq_len
         self.sos_idx = sos_idx
+        self.pad_idx = pad_idx
         self.num_permutations = num_permutations
 
         # Vision Transformer encoder

@@ -24,21 +24,17 @@ class PARSeqTrainer(BaseTrainer):
         self.converter = converter
 
     def convert_targets_to_indices(self, targets):
-        """
-        Convert string targets to indices for PARSeq.
-
-        Args:
-            targets: List of target text strings
-
-        Returns:
-            torch.Tensor: Tensor of indices
-        """
+        """Convert string targets to indices for PARSeq."""
         batch_indices = []
         max_len = 0
 
         # First pass to find max length
         for text in targets:
-            indices = [self.converter.char2idx.get(char, 1) for char in text]  # 1 for unknown
+            indices = []
+            for char in text:
+                idx = self.converter.char2idx.get(char, 0)  # Use 0 for unknown chars
+                if idx > 0:  # Only add valid character indices
+                    indices.append(idx)
             max_len = max(max_len, len(indices))
             batch_indices.append(indices)
 
@@ -49,6 +45,22 @@ class PARSeqTrainer(BaseTrainer):
             padded_indices.append(padded)
 
         return torch.tensor(padded_indices, dtype=torch.long)
+
+    def debug_converter(self):
+        """Print debug information about the converter"""
+        print("\nConverter Debug Info:")
+        print(f"Blank token index: {self.converter.blank_idx}")
+        print(f"First 10 char2idx mappings: {dict(list(self.converter.char2idx.items())[:10])}")
+        print(f"First 10 idx2char mappings: {dict(list(self.converter.idx2char.items())[:10])}")
+
+        # Basic test
+        test_str = "test"
+        indices, _ = self.converter.encode([test_str])
+        print(f"Test string '{test_str}' encodes to: {indices.tolist()}")
+
+        # Call this function before training
+        # self.debug_converter()
+
 
     def train(self, train_loader, val_loader, epochs=50, lr=0.0007):
         """
@@ -253,12 +265,19 @@ class PARSeqTrainer(BaseTrainer):
                     decode_outputs = self.model(images, train=False)
                     predictions = decode_outputs["predictions"]
 
+                    # Debug: Print shapes and a sample of raw predictions
+                    if batch_idx == 0 and len(predictions) > 0:
+                        print(f"\nDebug - Prediction shape: {predictions.shape}")
+                        print(f"Debug - First prediction: {predictions[0].tolist()[:10]} (first 10 indices only)")
+
                     # Convert indices to text
                     pred_texts = []
                     for pred in predictions:
+                        # Skip pad/blank tokens (0) and convert valid tokens
                         text = ''.join(self.converter.idx2char.get(idx.item(), '')
-                                      for idx in pred if idx.item() != self.converter.blank_idx)
+                                        for idx in pred if idx.item() > 0)  # Only use indices > 0
                         pred_texts.append(text)
+                        print(f"Sample prediction: '{text}'")  # Show a prediction
                 else:
                     # Quick mode: Skip decoding and just use empty strings during development
                     pred_texts = [""] * len(labels)

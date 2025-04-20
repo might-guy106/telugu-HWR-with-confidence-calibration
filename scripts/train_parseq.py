@@ -135,6 +135,8 @@ def main(args):
         save_dir=args.output_dir
     )
 
+    trainer.debug_converter()
+
     # Load checkpoint if provided
     if args.resume:
         logger.info(f"Resuming from checkpoint: {args.resume}")
