@@ -1,215 +1,315 @@
 import os
 import time
 import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-import torchvision.utils as vutils
-from models.parseq import PARSeq
-from utils.metrics import compute_accuracy
 import logging
+from torch import nn, optim
+from torch.utils.data import DataLoader
+import torch.nn.functional as F
+from tqdm import tqdm
 
-class PARSeqTrainer:
-    def __init__(self, config):
-        self.config = config
-        self.device = config.device
-        
-        # Create model
-        self.model = PARSeq(
-            d_model=config.d_model,
-            num_heads=config.num_heads,
-            enc_layers=config.enc_layers,
-            dec_layers=config.dec_layers,
-            dim_feedforward=config.dim_feedforward,
-            dropout=config.dropout,
-            max_length=config.max_length,
-            num_classes=config.num_classes,
-            pad_id=config.pad_id,
-            eos_id=config.eos_id,
-            image_height=config.img_height,
-            image_width=config.img_width
-        ).to(self.device)
-        
-        logging.info(f"Model created with {sum(p.numel() for p in self.model.parameters())} parameters")
-        
-        # Create optimizer
-        self.optimizer = torch.optim.Adam(
-            self.model.parameters(), 
-            lr=config.learning_rate,  # Use directly without scaling
-            weight_decay=config.weight_decay
-        )
-        
-        # Create scheduler
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, 'min', patience=config.patience, factor=0.5
-        )
-        
-        # Create criterion
-        self.criterion = nn.CrossEntropyLoss(ignore_index=config.pad_id)
-        
-        # Create scaler for mixed precision training
-        self.scaler = torch.cuda.amp.GradScaler()
-        
-        self.best_val_loss = float('inf')
-        self.best_val_accuracy = 0
+from models.parseq import PARSeqLoss  # This will now work with the added class
+from utils.metrics import calculate_metrics
+from trainers.base_trainer import BaseTrainer
 
-    def train(self, train_loader, val_loader, epochs):
-        logging.info(f"Starting training with initial lr={self.optimizer.param_groups[0]['lr']}")
-        start_time = time.time()
-        
-        for epoch in range(1, epochs+1):
-            train_loss, train_accuracy = self._train_epoch(train_loader, epoch, epochs)
-            val_loss, val_accuracy = self._validate(val_loader, epoch, epochs)
-            
-            # Update scheduler
-            self.scheduler.step(val_loss)
-            
-            # Save checkpoint if improved
-            if val_loss < self.best_val_loss:
-                self.best_val_loss = val_loss
-                self.best_val_accuracy = val_accuracy
-                self.save_checkpoint(os.path.join(self.config.output_dir, 'best_model.pth'))
-            
-        # Save final model
-        self.save_checkpoint(os.path.join(self.config.output_dir, 'final_model.pth'))
-        
-        elapsed = time.time() - start_time
-        logging.info(f"Time elapsed: {elapsed:.1f} seconds")
-        
-    def _train_epoch(self, train_loader, epoch, total_epochs):
-        self.model.train()
-        running_loss = 0.0
-        correct = 0
-        total = 0
-        nan_batches = 0
-        
-        from tqdm import tqdm
-        progress_bar = tqdm(
-            train_loader, 
-            desc=f"Epoch {epoch}/{total_epochs} [Train]",
-            leave=True
+logger = logging.getLogger(__name__)
+
+class PARSeqTrainer(BaseTrainer):
+    """
+    Trainer for PARSeq models.
+
+    Args:
+        model: PARSeq model to train
+        device: Device to train on (cuda/cpu)
+        tokenizer: Tokenizer for encoding/decoding text
+        save_dir: Directory to save checkpoints
+    """
+
+    def __init__(self, model, device, tokenizer, save_dir='checkpoints/parseq'):
+        super().__init__(model, device, save_dir)
+        self.tokenizer = tokenizer
+
+        # Create loss function with label smoothing
+        self.criterion = PARSeqLoss(ignore_index=tokenizer.pad_id, label_smoothing=0.1)
+
+    def train(self, train_loader, val_loader, epochs=30, lr=0.0007, weight_decay=0.0001):
+        """Train the PARSeq model."""
+        self.model = self.model.to(self.device)
+
+        # Start with a lower learning rate for stability
+        initial_lr = lr * 0.01
+
+        # Create optimizer with conservative settings
+        optimizer = optim.AdamW(
+            self.model.parameters(),
+            lr=initial_lr,
+            weight_decay=weight_decay,
+            betas=(0.9, 0.999),
+            eps=1e-8
         )
-        
-        for i, batch in enumerate(progress_bar):
-            images, texts = batch
-            
-            # Debug text encoding
-            if i < 2:  # Only print for first two batches
-                for j in range(2):  # Print first two examples
-                    if j < len(texts):
-                        print(f"Encoding text: '{texts[j]}'")
-                        indices = self.config.tokenizer.encode(texts[j])
-                        print(f"Encoded indices: {indices}")
-            
-            images = images.to(self.device)
-            encoded = [self.config.tokenizer.encode(text) for text in texts]
-            
-            # Zero gradients
-            self.optimizer.zero_grad()
-            
-            # Forward pass with mixed precision
-            with torch.amp.autocast(device_type='cuda', enabled=True):  # Updated autocast API
-                outputs = self.model(images, encoded, self.config.num_permutations)
-                loss = self.model.compute_loss(outputs, encoded, self.criterion)
-            
-            # Skip batch with NaN loss
-            if torch.isnan(loss).item():
-                nan_batches += 1
-                progress_bar.set_postfix(loss="NaN", NaN_batches=nan_batches)
-                continue
-                
-            # Backward pass with gradient scaling
-            self.scaler.scale(loss).backward()
-            
-            # Add gradient clipping to prevent exploding gradients
-            self.scaler.unscale_(self.optimizer)
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
-            
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
-            
-            # Calculate accuracy
-            batch_acc = self.model.calculate_accuracy(outputs, encoded)
-            
-            running_loss += loss.item()
-            correct += batch_acc[0]
-            total += batch_acc[1]
-            
-            # Update progress bar
-            progress_bar.set_postfix(
-                loss=f"{running_loss/(i+1-nan_batches):.4f}",
-                acc=f"{correct/total*100:.2f}%",
-                NaN_batches=nan_batches
-            )
-        
-        epoch_loss = running_loss / (len(train_loader) - nan_batches) if len(train_loader) > nan_batches else float('inf')
-        epoch_accuracy = correct / total if total > 0 else 0
-        
-        if nan_batches > 0:
-            logging.warning(f"Skipped {nan_batches}/{len(train_loader)} batches with NaN loss")
-        
-        return epoch_loss, epoch_accuracy
-        
-    def _validate(self, val_loader, epoch, total_epochs):
-        self.model.eval()
-        running_loss = 0.0
-        correct = 0
-        total = 0
-        
-        with torch.no_grad():
-            from tqdm import tqdm
-            progress_bar = tqdm(
-                val_loader, 
-                desc=f"Epoch {epoch}/{total_epochs} [Val]",
-                leave=True
-            )
-            
-            for i, batch in enumerate(progress_bar):
-                images, texts = batch
-                images = images.to(self.device)
-                encoded = [self.config.tokenizer.encode(text) for text in texts]
-                
-                # Forward pass
-                outputs = self.model(images, encoded, 1)  # No permutations during validation
-                loss = self.model.compute_loss(outputs, encoded, self.criterion)
-                
-                # Calculate accuracy
-                batch_acc = self.model.calculate_accuracy(outputs, encoded)
-                
-                running_loss += loss.item()
-                correct += batch_acc[0]
-                total += batch_acc[1]
-                
-                # Update progress bar
-                progress_bar.set_postfix(
-                    loss=f"{running_loss/(i+1):.4f}",
-                    acc=f"{correct/total*100:.2f}%"
-                )
-        
-        epoch_loss = running_loss / len(val_loader) if len(val_loader) > 0 else float('inf')
-        epoch_accuracy = correct / total if total > 0 else 0
-        
-        return epoch_loss, epoch_accuracy
-        
-    def save_checkpoint(self, checkpoint_path):
-        checkpoint = {
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'scheduler_state_dict': self.scheduler.state_dict(),
-            'best_val_loss': self.best_val_loss,
-            'best_val_accuracy': self.best_val_accuracy,
+
+        # LR scheduler - OneCycleLR works well with PARSeq
+        scheduler = optim.lr_scheduler.OneCycleLR(
+            optimizer,
+            max_lr=lr,
+            epochs=epochs,
+            steps_per_epoch=len(train_loader),
+            pct_start=0.1,  # Warm up for 10% of training
+            div_factor=25,  # initial_lr = max_lr/25
+            final_div_factor=1000,  # min_lr = initial_lr/1000
+        )
+
+        # Initialize history
+        self.history = {
+            'train_loss': [],
+            'val_loss': [],
+            'val_cer': [],
+            'val_wer': [],
+            'val_acc': [],
+            'learning_rates': []
         }
-        torch.save(checkpoint, checkpoint_path)
-        logging.info(f"Saved checkpoint to {checkpoint_path}")
-        
-    def load_checkpoint(self, checkpoint_path):
-        if not os.path.exists(checkpoint_path):
-            logging.warning(f"Checkpoint file {checkpoint_path} not found")
-            return
-            
-        checkpoint = torch.load(checkpoint_path, map_location=self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-        self.best_val_loss = checkpoint['best_val_loss']
-        self.best_val_accuracy = checkpoint['best_val_accuracy']
-        logging.info(f"Loaded checkpoint from {checkpoint_path}")
+
+        # Initialize best metrics
+        best_val_loss = float('inf')
+        best_val_cer = float('inf')
+        self.start_time = time.time()
+
+        # Training loop
+        logger.info(f"Starting training with initial lr={initial_lr:.6f}")
+
+        for epoch in range(epochs):
+            # Training phase
+            self.model.train()
+            train_loss = 0.0
+            valid_batches = 0
+            nan_batches = 0
+
+            progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs} [Train]")
+            for images, labels in progress_bar:
+                # Move data to device
+                images = images.to(self.device)
+
+                # Tokenize labels
+                encoded_targets, _ = self.tokenizer.encode(labels)
+                targets = torch.tensor(encoded_targets, device=self.device)
+
+                # Zero gradients
+                optimizer.zero_grad()
+
+                try:
+                    # Forward pass
+                    outputs = self.model(images, targets)
+                    logits = outputs["logits"]
+                    tgt_output = outputs["targets"]
+
+                    # Check for NaN in logits and skip if found
+                    if torch.isnan(logits).any():
+                        nan_batches += 1
+                        progress_bar.set_postfix({'loss': 'NaN', 'NaN batches': nan_batches})
+                        continue
+
+                    # Calculate loss
+                    loss = self.criterion(logits, tgt_output)
+
+                    # Check for NaN loss
+                    if torch.isnan(loss).item() or torch.isinf(loss).item():
+                        nan_batches += 1
+                        progress_bar.set_postfix({'loss': 'NaN', 'NaN batches': nan_batches})
+                        continue
+
+                    # Backward and optimize
+                    loss.backward()
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                    optimizer.step()
+                    scheduler.step()
+
+                    # Accumulate stats
+                    train_loss += loss.item()
+                    valid_batches += 1
+
+                    # Update progress bar
+                    progress_bar.set_postfix({
+                        'loss': loss.item(),
+                        'lr': scheduler.get_last_lr()[0],
+                        'NaN batches': nan_batches
+                    })
+
+                except Exception as e:
+                    logger.error(f"Error in batch: {str(e)}")
+                    nan_batches += 1
+                    continue
+
+            # Log NaN batches
+            if nan_batches > 0:
+                logger.warning(f"Skipped {nan_batches}/{len(train_loader)} batches")
+
+            # Calculate average loss
+            if valid_batches > 0:
+                train_loss /= valid_batches
+            else:
+                train_loss = float('nan')
+
+            self.history['train_loss'].append(train_loss)
+            self.history['learning_rates'].append(scheduler.get_last_lr()[0])
+
+            # Validation
+            if valid_batches > 0:
+                val_loss, metrics = self.validate(val_loader)
+
+                self.history['val_loss'].append(val_loss)
+                self.history['val_cer'].append(metrics['character_error_rate'])
+                self.history['val_wer'].append(metrics['word_error_rate'])
+                self.history['val_acc'].append(metrics['accuracy'])
+
+                # Log summary
+                logger.info(f"Epoch {epoch+1}/{epochs} Summary - "
+                          f"Train Loss: {train_loss:.4f}, "
+                          f"Val Loss: {val_loss:.4f}, "
+                          f"Val CER: {metrics['character_error_rate']:.2f}%, "
+                          f"Val WER: {metrics['word_error_rate']:.2f}%, "
+                          f"Val Acc: {metrics['accuracy']:.2f}%")
+
+                # Save best models
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    self.save_checkpoint(
+                        epoch=epoch,
+                        optimizer=optimizer,
+                        metrics=metrics,
+                        filename="best_loss_model.pth"
+                    )
+
+                if metrics['character_error_rate'] < best_val_cer:
+                    best_val_cer = metrics['character_error_rate']
+                    self.save_checkpoint(
+                        epoch=epoch,
+                        optimizer=optimizer,
+                        metrics=metrics,
+                        filename="best_cer_model.pth"
+                    )
+
+                # Save checkpoint every few epochs
+                if (epoch + 1) % 5 == 0 or epoch == epochs - 1:
+                    self.save_checkpoint(
+                        epoch=epoch,
+                        optimizer=optimizer,
+                        metrics=metrics,
+                        filename=f"checkpoint_epoch_{epoch+1}.pth"
+                    )
+
+        # Final save
+        self.save_checkpoint(
+            epoch=epochs-1,
+            optimizer=optimizer,
+            metrics=metrics if valid_batches > 0 else {"character_error_rate": 100.0},
+            filename="final_model.pth"
+        )
+
+        self.log_elapsed_time()
+        return self.model, self.history
+
+    def validate(self, data_loader):
+        """Validate the model with improved debugging."""
+        self.model.eval()
+        val_loss = 0.0
+        all_predictions = []
+        all_targets = []
+        valid_batches = 0
+
+        with torch.no_grad():
+            for batch_idx, (images, labels) in enumerate(tqdm(data_loader, desc="Validation")):
+                try:
+                    # Move data to device
+                    images = images.to(self.device)
+
+                    # Debug info for the first batch
+                    if batch_idx == 0:
+                        print(f"\nDEBUG: Validating first batch with {len(labels)} samples")
+                        print(f"DEBUG: First few labels: {labels[:3]}")
+
+                    # Get model predictions (inference mode)
+                    outputs = self.model(images)
+                    pred_ids = outputs["logits"]
+
+                    # Debug token sequences
+                    if batch_idx == 0:
+                        print(f"DEBUG: Raw prediction shape: {pred_ids.shape}")
+                        print(f"DEBUG: First prediction tokens: {pred_ids[0]}")
+
+                    # We need to filter out SOS, PAD, and EOS tokens before decoding
+                    # This is often the source of empty predictions
+                    pred_texts = []
+                    for pred in pred_ids:
+                        # Convert to list and process
+                        tokens = pred.cpu().tolist()
+
+                        # Remove SOS token (always first)
+                        if tokens and tokens[0] == self.tokenizer.sos_id:
+                            tokens = tokens[1:]
+
+                        # Find EOS token and truncate
+                        if self.tokenizer.eos_id in tokens:
+                            eos_idx = tokens.index(self.tokenizer.eos_id)
+                            tokens = tokens[:eos_idx]
+
+                        # Filter PAD tokens
+                        tokens = [t for t in tokens if t != self.tokenizer.pad_id]
+
+                        # Convert indices to characters
+                        text = ''.join([self.tokenizer.idx_to_char.get(idx, '') for idx in tokens])
+                        pred_texts.append(text)
+
+                    # Debug decoded texts
+                    if batch_idx == 0:
+                        print(f"DEBUG: First few decoded texts: {pred_texts[:3]}")
+
+                    # Store for metrics calculation
+                    all_predictions.extend(pred_texts)
+                    all_targets.extend(labels)
+
+                    # For validation loss, use teacher forcing mode
+                    try:
+                        encoded_targets, _ = self.tokenizer.encode(labels)
+                        targets = torch.tensor(encoded_targets, device=self.device)
+
+                        # Forward pass with targets for loss calculation
+                        outputs_with_targets = self.model(images, targets)
+                        logits = outputs_with_targets["logits"]
+                        tgt_output = outputs_with_targets["targets"]
+
+                        # Calculate loss if no NaN
+                        if not torch.isnan(logits).any():
+                            loss = self.criterion(logits, tgt_output)
+                            if not torch.isnan(loss).item() and not torch.isinf(loss).item():
+                                val_loss += loss.item()
+                                valid_batches += 1
+                    except Exception as e:
+                        print(f"DEBUG: Error in validation loss calculation: {str(e)}")
+
+                except Exception as e:
+                    print(f"DEBUG: Error in validation batch {batch_idx}: {str(e)}")
+                    continue
+
+        # Calculate average loss
+        if valid_batches > 0:
+            val_loss /= valid_batches
+        else:
+            val_loss = float('nan')
+
+        # Calculate metrics
+        if len(all_predictions) > 0:
+            metrics = calculate_metrics(all_predictions, all_targets)
+        else:
+            metrics = {
+                'character_error_rate': 100.0,
+                'word_error_rate': 100.0,
+                'accuracy': 0.0,
+                'total_samples': len(data_loader.dataset),
+                'correct_words': 0
+            }
+
+        # Log examples
+        print("\nValidation Examples (GT vs Pred):")
+        for gt, pred in zip(all_targets[:5], all_predictions[:5]):
+            print(f"GT: '{gt}' | Pred: '{pred}'")
+
+        return val_loss, metrics

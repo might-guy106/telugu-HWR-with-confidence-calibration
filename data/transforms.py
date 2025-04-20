@@ -100,13 +100,13 @@ def get_transforms(phase, img_height=64, img_width=256):
             ResizeWithPad(img_height, img_width, pad_value=255),
 
             # Data augmentation (only for training)
-            transforms.RandomApply([
-                ElasticTransform(alpha=30, sigma=3)
-            ], p=0.5),
-            transforms.RandomApply([
-                transforms.RandomAffine(degrees=3, shear=5,
-                                       fill=255)
-            ], p=0.3),
+            # transforms.RandomApply([
+            #     ElasticTransform(alpha=30, sigma=3)
+            # ], p=0.5),
+            # transforms.RandomApply([
+            #     transforms.RandomAffine(degrees=3, shear=5,
+            #                            fill=255)
+            # ], p=0.3),
             # Optional contrast/brightness adjustments
             transforms.RandomApply([
                 transforms.ColorJitter(brightness=0.3, contrast=0.3)

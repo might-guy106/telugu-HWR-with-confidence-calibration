@@ -28,83 +28,54 @@ class PARSeqTokenizer:
         self.idx_to_char[self.sos_id] = "<s>"
         self.idx_to_char[self.eos_id] = "</s>"
 
-    def encode(self, batch_texts: list[str]) -> tuple[np.ndarray, list[int]]:
-        """
-        Encode a batch of texts to token indices with debug printing.
-        """
+    def encode(self, batch_texts):
+        """Encode text to token indices, ensuring proper handling of special tokens."""
         batch_size = len(batch_texts)
-        seq_lengths = [min(len(text), self.max_length) for text in batch_texts]
-        max_seq_len = max(seq_lengths)
+        max_seq_len = max(len(text) for text in batch_texts)
+        max_seq_len = min(max_seq_len, self.max_length)
 
-        # Create tensor with padding
-        encoded = np.ones((batch_size, max_seq_len + 2), dtype=np.int64) * self.pad_id
+        # Create tensor for the batch with padding
+        encoded = torch.full((batch_size, max_seq_len + 2), self.pad_id, dtype=torch.long)
 
         # Add SOS token at the beginning
         encoded[:, 0] = self.sos_id
 
         # Encode each text
         for i, text in enumerate(batch_texts):
-            # Debug the first few examples
-            if i < 2:  # Print first 2 examples
-                print(f"Encoding text: '{text}'")
-
-            # Limit to max_length
-            text = text[:self.max_length]
-
-            # Convert characters to indices
-            char_indices = []
-            for char in text:
+            text = text[:max_seq_len]  # Truncate if too long
+            for j, char in enumerate(text):
                 if char in self.char_to_idx:
-                    char_indices.append(self.char_to_idx[char])
-                else:
-                    print(f"Warning: Character '{char}' not in vocabulary, skipping")
-
-            # Add to encoded tensor
-            encoded[i, 1:len(char_indices)+1] = char_indices
+                    encoded[i, j+1] = self.char_to_idx[char]
 
             # Add EOS token
-            encoded[i, len(char_indices)+1] = self.eos_id
+            encoded[i, len(text)+1] = self.eos_id
 
-            # Debug the first few examples
-            if i < 2:  # Print first 2 examples
-                print(f"Encoded indices: {encoded[i]}")
+        return encoded, [len(text)+2 for text in batch_texts]  # +2 for SOS and EOS
 
-        return encoded, seq_lengths
-
-    def decode(self, token_indices: torch.Tensor) -> list[str]:
-        """
-        Decode token indices to texts with better error handling.
-        """
+    def decode(self, token_indices):
+        """Decode with NaN protection and better handling of special tokens."""
         texts = []
 
-        # Handle both tensor and numpy array inputs
+        # Handle tensor input
         if isinstance(token_indices, torch.Tensor):
             token_indices = token_indices.cpu().numpy()
 
-        # Handle both 1D and 2D inputs
-        if token_indices.ndim == 0:
-            # Single integer - wrap in list
-            token_indices = np.array([[token_indices]])
-        elif token_indices.ndim == 1:
-            # 1D array - add batch dimension
-            token_indices = token_indices.reshape(1, -1)
+        for seq in token_indices:
+            # Skip initial SOS token
+            if seq[0] == self.sos_id:
+                seq = seq[1:]
 
-        for indices in token_indices:
+            # Find first EOS token and truncate
+            eos_pos = np.where(seq == self.eos_id)[0]
+            if len(eos_pos) > 0:
+                seq = seq[:eos_pos[0]]
+
+            # Convert tokens to characters, skipping pad tokens
             chars = []
-
-            # Ensure indices is iterable
-            if not hasattr(indices, '__iter__'):
-                indices = [indices]
-
-            for idx in indices:
-                # Stop at EOS token
-                if idx == self.eos_id:
-                    break
-                # Skip special tokens
-                if idx not in (self.pad_id, self.sos_id) and idx in self.idx_to_char:
+            for idx in seq:
+                if idx != self.pad_id and idx in self.idx_to_char:
                     chars.append(self.idx_to_char[idx])
 
-            decoded_text = "".join(chars)
-            texts.append(decoded_text)
+            texts.append(''.join(chars))
 
         return texts

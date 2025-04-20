@@ -72,7 +72,7 @@ The system expects data in the following format:
 
 ```bash
 python scripts/train_crnn.py \
-    --data_root "/home/pankaj/Desktop/698r project/datasets/telugu datset" \
+    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
     --train_file train.txt \
     --val_file val.txt \
     --vocab_file ../output/vocabulary.txt \
@@ -93,7 +93,7 @@ Add `--mc_dropout` flag to train with Monte Carlo dropout for uncertainty estima
 
 ```bash
 python scripts/train_parseq.py \
-    --data_root "/home/pankaj/Desktop/698r project/datasets/telugu datset" \
+    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
     --train_file train.txt \
     --val_file val.txt \
     --vocab_file ../output/vocabulary.txt \
@@ -105,7 +105,7 @@ python scripts/train_parseq.py \
     --max_length 35 \
     --num_permutations 6 \
     --batch_size 32 \
-    --epochs 5 \
+    --epochs 1 \
     --learning_rate 0.0007 \
     --cuda
 ```
