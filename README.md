@@ -131,12 +131,14 @@ For PARSeq models, use `--model_type parseq`.
 
 ```bash
 python scripts/evaluate_confidence.py \
-    --data_root "/home/pankaj/Desktop/698r project/datasets/telugu datset" \
+    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
     --val_file val.txt \
     --test_file test.txt \
-    --vocab_file ../output/crnn/vocabulary.txt \
-    --model_path ../output/crnn/best_cer_model.pth \
-    --output_dir ../output/confidence_evaluation \
+    --test_samples 1000 \
+    --val_samples 200 \
+    --vocab_file ./output/vocabulary.txt \
+    --model_path ./output/crnn/best_cer_model.pth \
+    --output_dir ./output/confidence_evaluation \
     --batch_size 32 \
     --dropout_rate 0.2 \
     --calib_level word \
