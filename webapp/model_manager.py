@@ -2,6 +2,7 @@ import os
 import sys
 import torch
 import numpy as np
+import json
 from PIL import Image
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -49,10 +50,10 @@ class ModelManager:
 
         # Initialize confidence estimators
         self.confidence_estimators = {
-            'uncalibrated': UncalibratedConfidence(self.model, self.device, self.converter),
-            'temperature': TemperatureScaling(self.model, self.device, self.converter),
-            'step_dependent': StepDependentTemperatureScaling(self.model, self.device, self.converter),
-            'mc_dropout': MCDropoutConfidence(self.model, self.device, self.converter, num_samples=10),
+            'uncalibrated': UncalibratedConfidence(self.model, self.device, self.converter, agg_method='min'),
+            'temperature': TemperatureScaling(self.model, self.device, self.converter, agg_method='min'),
+            'step_dependent': StepDependentTemperatureScaling(self.model, self.device, self.converter, agg_method='min'),
+            'mc_dropout': MCDropoutConfidence(self.model, self.device, self.converter, num_samples=10, agg_method='min'),
         }
 
         # Temperatures for the calibrated models (these would come from calibration)
@@ -102,26 +103,87 @@ class ModelManager:
 
     def _init_calibration(self):
         """Initialize calibration for confidence estimators"""
-        # In a real implementation, you would load calibration parameters
-        # from previously saved files
+        # Try to load calibration parameters from saved files
+        calib_dir = os.path.join(project_root, 'output', 'confidence_evaluation_min', 'calibration_params')
 
-        # For demonstration, we'll set some example values
-        if isinstance(self.confidence_estimators['temperature'], TemperatureScaling):
-            # Set a fixed temperature value
+        # Load aggregation method preferences if available
+        agg_methods = {'geometric_mean': 'geometric_mean', 'product': 'product', 'min': 'min'}
+        agg_method_path = os.path.join(calib_dir, 'aggregation_methods.json')
+        if os.path.exists(agg_method_path):
+            try:
+                with open(agg_method_path, 'r') as f:
+                    agg_methods = json.load(f)
+                    print(f"Loaded recommended aggregation methods")
+            except Exception as e:
+                print(f"Error loading aggregation methods: {str(e)}")
+
+        # Temperature scaling parameters
+        temp_params_path = os.path.join(calib_dir, 'temperature_scaling.json')
+        if os.path.exists(temp_params_path):
+            try:
+                with open(temp_params_path, 'r') as f:
+                    temp_params = json.load(f)
+                    self.confidence_estimators['temperature'].temperature.data = torch.tensor(
+                        [temp_params['temperature']], device=self.device
+                    )
+                    # Set recommended aggregation method if available
+                    if 'Temperature Scaling' in agg_methods:
+                        self.confidence_estimators['temperature'].agg_method = agg_methods['Temperature Scaling']
+
+                    self.confidence_estimators['temperature'].calibrated = True
+                    print(f"Loaded temperature scaling parameter: {temp_params['temperature']}")
+            except Exception as e:
+                print(f"Error loading temperature scaling parameters: {str(e)}")
+                # Fallback to default
+                self.confidence_estimators['temperature'].temperature.data = torch.tensor([1.5], device=self.device)
+                self.confidence_estimators['temperature'].calibrated = True
+        else:
+            # Fallback to default
             self.confidence_estimators['temperature'].temperature.data = torch.tensor([1.5], device=self.device)
             self.confidence_estimators['temperature'].calibrated = True
+            print("Using default temperature scaling parameter: 1.5")
 
-        if isinstance(self.confidence_estimators['step_dependent'], StepDependentTemperatureScaling):
-            # Set fixed temperature values for each position
-            temps = torch.ones(11, device=self.device) * 1.2
-            # Make some positions cooler/hotter for demonstration
-            temps[0] = 1.5  # First position usually needs higher temperature
-            temps[1:5] = 1.3  # Middle positions
-            temps[5:] = 1.1  # Later positions
-            self.confidence_estimators['step_dependent'].temperatures.data = temps
-            self.confidence_estimators['step_dependent'].calibrated = True
+        # Step-dependent temperature scaling parameters
+        step_params_path = os.path.join(calib_dir, 'step_dependent_scaling.json')
+        if os.path.exists(step_params_path):
+            try:
+                with open(step_params_path, 'r') as f:
+                    step_params = json.load(f)
+                    temps = torch.tensor(step_params['temperatures'], device=self.device)
+                    self.confidence_estimators['step_dependent'].temperatures.data = temps
+
+                    # Set recommended aggregation method if available
+                    if 'Step Dependent T-Scaling' in agg_methods:
+                        self.confidence_estimators['step_dependent'].agg_method = agg_methods['Step Dependent T-Scaling']
+
+                    self.confidence_estimators['step_dependent'].calibrated = True
+                    print(f"Loaded step-dependent temperature scaling parameters")
+            except Exception as e:
+                print(f"Error loading step-dependent parameters: {str(e)}")
+                # Fallback to default values
+                self._set_default_step_temperatures()
+        else:
+            # Fallback to default values
+            self._set_default_step_temperatures()
+
+        # Set aggregation methods for other estimators
+        if 'Uncalibrated' in agg_methods:
+            self.confidence_estimators['uncalibrated'].agg_method = agg_methods['Uncalibrated']
+
+        if 'MC Dropout' in agg_methods:
+            self.confidence_estimators['mc_dropout'].agg_method = agg_methods['MC Dropout']
 
         # MC Dropout doesn't need calibration
+
+    def _set_default_step_temperatures(self):
+        """Set default step-dependent temperature values"""
+        temps = torch.ones(11, device=self.device) * 1.2
+        temps[0] = 1.5  # First position usually needs higher temperature
+        temps[1:5] = 1.3  # Middle positions
+        temps[5:] = 1.1  # Later positions
+        self.confidence_estimators['step_dependent'].temperatures.data = temps
+        self.confidence_estimators['step_dependent'].calibrated = True
+        print("Using default step-dependent temperature values")
 
     def preprocess_image(self, image):
         """Preprocess the image for model input"""
@@ -143,7 +205,7 @@ class ModelManager:
 
         return image_tensor
 
-    def recognize(self, image, method='step_dependent'):
+    def recognize(self, image, method='step_dependent', agg_method='min'):
         """
         Recognize text in the image and calculate confidence
 
@@ -165,7 +227,7 @@ class ModelManager:
         estimator = self.confidence_estimators[method]
 
         # Get prediction with confidence
-        result = estimator.get_confidence(image_tensor)
+        result = estimator.get_confidence(image_tensor, agg_method=agg_method)
 
         # Extract basic information
         prediction = result['predictions'][0]  # Get first item (batch size 1)
@@ -183,8 +245,9 @@ class ModelManager:
             'overall_confidence': float(confidence),
             'character_confidences': [float(c) for c in char_confidences],
             'confidence_heatmap': heatmap_b64,
-            'method': method
+            'method': method,
         }
+        formatted_result['agg_method'] = agg_method
 
         # Add method-specific data
         if method == 'step_dependent' and 'temperatures' in result:

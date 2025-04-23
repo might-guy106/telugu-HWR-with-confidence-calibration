@@ -27,7 +27,7 @@ class StepDependentTemperatureScaling(ConfidenceEstimator):
         initial_temp: Initial temperature value for all positions
     """
 
-    def __init__(self, model, device, converter, max_seq_len=50, tau=10, initial_temp=1.0, agg_method='geometric_mean'):
+    def __init__(self, model, device, converter, max_seq_len=50, tau=10, initial_temp=1.0, agg_method='min'):
         super().__init__(model, device, converter, agg_method)
         self.name = "Step Dependent T-Scaling"
         self.max_seq_len = max_seq_len
@@ -160,9 +160,6 @@ class StepDependentTemperatureScaling(ConfidenceEstimator):
 
 
         self.calibrated = True
-        # Add at the end of the calibrate method
-        conf_type = "length-normalized (geometric mean)" if self.normalize_confidence else "unnormalized (product)"
-        print(f"Confidence type used: {conf_type}")
         return best_temps.cpu().numpy()
 
     def get_confidence(self, images, agg_method=None):

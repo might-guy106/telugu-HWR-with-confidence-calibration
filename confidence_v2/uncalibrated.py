@@ -15,7 +15,7 @@ class UncalibratedConfidence(ConfidenceEstimator):
         converter: Label converter for decoding
         normalize_confidence: Whether to normalize confidence scores
     """
-    def __init__(self, model, device, converter, agg_method='geometric_mean'):
+    def __init__(self, model, device, converter, agg_method='min'):
         super().__init__(model, device, converter, agg_method)
         self.name = "Uncalibrated"
         # Uncalibrated confidence doesn't need calibration

@@ -3,7 +3,8 @@ import numpy as np
 
 def decode_with_timestamps(probs, converter):
     """
-    Decode CTC output and track which timesteps produce each character.
+    Decode CTC output and track which timesteps produce each character,
+    using the minimum confidence when characters repeat.
 
     Args:
         probs: Probability tensor of shape [seq_len, batch_size, vocab_size]
@@ -26,21 +27,59 @@ def decode_with_timestamps(probs, converter):
         sequence = max_indices[:, b]
         prob_sequence = max_probs[:, b]
 
-        # CTC decoding with timestep tracking
+        # CTC decoding with tracking of repeated characters
         decoded_text = []
         confidences = []
         timesteps = []  # Track which timestep produced each character
 
-        prev_idx = -1
-        for t, (idx, prob) in enumerate(zip(sequence, prob_sequence)):
-            # Apply CTC rules (skip blanks and duplicates)
-            if idx != converter.blank_idx and idx != prev_idx:
-                char = converter.idx2char.get(idx, '')
-                decoded_text.append(char)
-                confidences.append(prob)
-                timesteps.append(t)  # Record the timestep
+        # For tracking repeated characters
+        current_char = None
+        current_char_positions = []
+        current_char_probs = []
 
-            prev_idx = idx if idx != converter.blank_idx else prev_idx
+        # Process the sequence
+        for t, (idx, prob) in enumerate(zip(sequence, prob_sequence)):
+            # Skip blank labels
+            if idx == converter.blank_idx:
+                continue
+
+            # Get character for this index
+            char = converter.idx2char.get(idx, '')
+
+            # If character changes, save the previous one
+            if current_char is not None and char != current_char:
+                # Find minimum probability among all occurrences
+                min_prob = min(current_char_probs)
+                # Find the position of that minimum (first if multiple)
+                min_prob_pos = current_char_positions[current_char_probs.index(min_prob)]
+
+                decoded_text.append(current_char)
+                confidences.append(min_prob)
+                timesteps.append(min_prob_pos)
+
+                # Reset for the new character
+                current_char = char
+                current_char_positions = [t]
+                current_char_probs = [prob]
+            # If this is the same character or first character
+            else:
+                if current_char is None:
+                    current_char = char
+                    current_char_positions = [t]
+                    current_char_probs = [prob]
+                else:
+                    # Same character, just add to the current group
+                    current_char_positions.append(t)
+                    current_char_probs.append(prob)
+
+        # Don't forget the last character
+        if current_char is not None:
+            min_prob = min(current_char_probs)
+            min_prob_pos = current_char_positions[current_char_probs.index(min_prob)]
+
+            decoded_text.append(current_char)
+            confidences.append(min_prob)
+            timesteps.append(min_prob_pos)
 
         results.append((''.join(decoded_text), confidences, timesteps))
 

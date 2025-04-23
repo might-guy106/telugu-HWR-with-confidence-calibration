@@ -261,6 +261,31 @@
                                     confidence.
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <label
+                                    for="aggregation-method"
+                                    class="form-label"
+                                    >Confidence Aggregation Method</label
+                                >
+                                <select
+                                    class="form-select"
+                                    id="aggregation-method"
+                                >
+                                    <option value="min" selected>
+                                        Minimum (Pessimistic)
+                                    </option>
+                                    <option value="geometric_mean">
+                                        Geometric Mean (Length-normalized)
+                                    </option>
+                                    <option value="product">
+                                        Product (Unnormalized)
+                                    </option>
+                                </select>
+                                <div class="form-text">
+                                    Method to combine character confidences into
+                                    a word-level score.
+                                </div>
+                            </div>
                         </div>
                     </div>
 

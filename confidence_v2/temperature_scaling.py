@@ -22,13 +22,13 @@ class TemperatureScaling(ConfidenceEstimator):
         converter: Converter to convert logits to probabilities
         normalize_confidence: Whether to use length-normalized confidence
     """
-    def __init__(self, model, device, converter, agg_method='geometric_mean'):
+    def __init__(self, model, device, converter, agg_method='min'):
         super().__init__(model, device, converter, agg_method)
         self.name = "Temperature Scaling"
         self.temperature = nn.Parameter(torch.ones(1).to(device))
         self.calibrated = False
 
-    def calibrate(self, val_loader, min_temp=1, max_temp=10, num_temps=10):
+    def calibrate(self, val_loader, min_temp=1.0, max_temp=2.0, num_temps=10):
         """
         Calibrate temperature using grid search to minimize ECE.
 
@@ -114,10 +114,6 @@ class TemperatureScaling(ConfidenceEstimator):
         # Set the best temperature
         self.temperature.data = torch.tensor([best_temp], device=self.device)
         print(f"Final calibrated temperature: {best_temp:.4f}, ECE: {best_ece:.4f}")
-
-        # Print type of confidence used
-        conf_type = "length-normalized (geometric mean)" if self.normalize_confidence else "unnormalized (product)"
-        print(f"Confidence type used: {conf_type}")
 
         self.calibrated = True
         return best_temp

@@ -17,7 +17,7 @@ class MCDropoutConfidence(ConfidenceEstimator):
     not aleatoric uncertainty (data noise). For aleatoric uncertainty, the model would
     need to be specifically trained to predict variance/noise.
     """
-    def __init__(self, model, device, converter, num_samples=30, agg_method='geometric_mean'):
+    def __init__(self, model, device, converter, num_samples=30, agg_method='min'):
         super().__init__(model, device, converter, agg_method)
         self.name = "MC Dropout"
         self.num_samples = num_samples

@@ -179,6 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Get the selected confidence method
     const method = confidenceMethod.value;
+    const aggMethod = document.getElementById("aggregation-method").value;
 
     // Create form data
     const formData = new FormData();
@@ -205,6 +206,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Add confidence method
     formData.append("confidence_method", method);
+    formData.append("aggregation_method", aggMethod);
 
     // Send request
     sendRecognizeRequest(formData, method);
@@ -317,6 +319,25 @@ document.addEventListener("DOMContentLoaded", function () {
   function displayMethodDetails(data) {
     let detailsHTML = "";
 
+    let aggMethodName = "Unknown";
+    switch (data.agg_method) {
+      case "geometric_mean":
+        aggMethodName = "Geometric Mean (Length-normalized)";
+        break;
+      case "product":
+        aggMethodName = "Product (Unnormalized)";
+        break;
+      case "min":
+        aggMethodName = "Minimum (Pessimistic)";
+        break;
+    }
+
+    const aggMethodHTML = `
+        <div class="mb-3">
+            <strong>Aggregation Method:</strong> ${aggMethodName}
+        </div>
+    `;
+
     switch (data.method) {
       case "temperature":
         detailsHTML = `
@@ -383,7 +404,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 `;
     }
 
-    methodDetails.innerHTML = detailsHTML;
+    methodDetails.innerHTML = aggMethodHTML + detailsHTML;
   }
 
   // Utility functions

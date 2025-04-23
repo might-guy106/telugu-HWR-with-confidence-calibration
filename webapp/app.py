@@ -71,11 +71,12 @@ def recognize():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             image.save(filepath)
 
-        # Get confidence method
+        # Get confidence method and aggregation method
         confidence_method = request.form.get('confidence_method', 'step_dependent')
+        aggregation_method = request.form.get('aggregation_method', 'geometric_mean')
 
         # Recognize text and get confidence
-        result = model_manager.recognize(image, method=confidence_method)
+        result = model_manager.recognize(image, method=confidence_method, agg_method=aggregation_method)
 
         # Return result
         return jsonify(result)

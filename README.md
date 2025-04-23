@@ -155,6 +155,8 @@ python scripts/evaluate_confidence.py \
     --output_dir output/confidence_evaluation_v8 \
     --batch_size 16 \
     --num_samples 30 \
+    --val_samples 1000 \
+    --test_samples 1000 \
     --agg_method min \
     --cuda
 ```
