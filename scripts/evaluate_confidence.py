@@ -15,7 +15,6 @@ from tqdm import tqdm
 from data.dataset import TeluguHWRDataset
 from data.transforms import get_transforms
 from models.crnn import CRNN
-from models.mc_dropout_crnn import MCDropoutCRNN
 from utils.ctc_decoder import CTCLabelConverter
 from confidence_v2.uncalibrated import UncalibratedConfidence
 from confidence_v2.temperature_scaling import TemperatureScaling
@@ -263,23 +262,13 @@ def main(args):
 
     # Create model
     logger.info(f"Loading model from {args.model_path}")
-    if args.mc_dropout:
-        model = MCDropoutCRNN(
-            img_height=args.img_height,
-            num_channels=1,
-            num_classes=converter.vocab_size,
-            rnn_hidden_size=args.hidden_size,
-            dropout_rate=args.dropout_rate
-        )
-        logger.info("Using MCDropoutCRNN model")
-    else:
-        model = CRNN(
-            img_height=args.img_height,
-            num_channels=1,
-            num_classes=converter.vocab_size,
-            rnn_hidden_size=args.hidden_size
-        )
-        logger.info("Using standard CRNN model")
+    model = CRNN(
+        img_height=args.img_height,
+        num_channels=1,
+        num_classes=converter.vocab_size,
+        rnn_hidden_size=args.hidden_size
+    )
+    logger.info("Using standard CRNN model")
 
     # Load model weights
     checkpoint = torch.load(args.model_path, map_location=device)

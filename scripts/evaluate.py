@@ -14,8 +14,6 @@ from torch.utils.data import DataLoader
 from data.dataset import TeluguHWRDataset
 from data.transforms import get_transforms
 from models.crnn import CRNN
-from models.mc_dropout_crnn import MCDropoutCRNN
-# from models.parseq import PARSeq
 from utils.ctc_decoder import CTCLabelConverter
 from utils.metrics import calculate_metrics
 from utils.visualization import plot_confusion_matrix, plot_error_distribution
@@ -55,23 +53,13 @@ def main(args):
 
     # Create model based on the model type
     if args.model_type == 'crnn':
-        if args.mc_dropout:
-            model = MCDropoutCRNN(
-                img_height=args.img_height,
-                num_channels=1,
-                num_classes=converter.vocab_size,
-                rnn_hidden_size=args.hidden_size,
-                dropout_rate=args.dropout_rate
-            )
-            logger.info("Using MCDropoutCRNN model")
-        else:
-            model = CRNN(
-                img_height=args.img_height,
-                num_channels=1,
-                num_classes=converter.vocab_size,
-                rnn_hidden_size=args.hidden_size
-            )
-            logger.info("Using standard CRNN model")
+        model = CRNN(
+            img_height=args.img_height,
+            num_channels=1,
+            num_classes=converter.vocab_size,
+            rnn_hidden_size=args.hidden_size
+        )
+        logger.info("Using standard CRNN model")
     elif args.model_type == 'parseq':
         model = PARSeq(
             vocab_size=90,  # Instead of len(vocab)
