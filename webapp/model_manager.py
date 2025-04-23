@@ -251,13 +251,22 @@ class ModelManager:
         # Create figure
         plt.figure(figsize=(0.6 * len(text), 0.8))
 
+        # Set a font that supports Telugu
+        # Try to use either Noto Sans Telugu or a system font with Unicode support
+        try:
+            plt.rcParams['font.family'] = 'Noto Sans Telugu, DejaVu Sans, sans-serif'
+        except:
+            print("Warning: Could not set Telugu font for matplotlib")
+
         # Create data for heatmap
         data = np.array([confidences])
 
-        # Create heatmap
+        # Create heatmap with characters as annotations
+        chars = np.array([[c for c in text]])
         ax = sns.heatmap(data, cmap='RdYlGn', vmin=0, vmax=1,
-                          annot=np.array([[c for c in text]]), fmt='',
-                          cbar=False, linewidths=1, linecolor='black')
+                         annot=chars, fmt='',
+                         cbar=False, linewidths=1, linecolor='black',
+                         annot_kws={'fontsize': 12})
 
         # Remove axis labels and ticks
         ax.set_xticks([])
@@ -266,7 +275,7 @@ class ModelManager:
 
         # Save to a BytesIO object
         buffer = BytesIO()
-        plt.savefig(buffer, format='png', bbox_inches='tight', pad_inches=0.1, dpi=100)
+        plt.savefig(buffer, format='png', bbox_inches='tight', pad_inches=0.1, dpi=150)
         plt.close()
 
         # Convert to base64 for embedding in HTML
