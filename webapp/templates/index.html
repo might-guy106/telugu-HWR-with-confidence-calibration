@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Telugu Handwriting Recognition</title>
+
+        <!-- Bootstrap CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+
+        <!-- Font Awesome -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+        />
+
+        <!-- Custom CSS -->
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='css/styles.css') }}"
+        />
+
+        <!-- Favicon -->
+        <link
+            rel="icon"
+            href="{{ url_for('static', filename='img/favicon.ico') }}"
+        />
+    </head>
+    <body>
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                <div class="container">
+                    <a class="navbar-brand" href="#">
+                        <i class="fas fa-language me-2"></i>
+                        Telugu HWR with Confidence
+                    </a>
+                    <button
+                        class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarNav"
+                    >
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#"
+                                    ><i class="fas fa-home me-1"></i> Home</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#about-section"
+                                    ><i class="fas fa-info-circle me-1"></i>
+                                    About</a
+                                >
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                    class="nav-link"
+                                    href="https://github.com/yourusername/telugu-hwr"
+                                    target="_blank"
+                                >
+                                    <i class="fab fa-github me-1"></i> GitHub
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main class="container my-5">
+            <div class="row g-4">
+                <!-- Introduction -->
+                <div class="col-lg-12 mb-4">
+                    <div class="card bg-light border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h1 class="text-center mb-4">
+                                Telugu Handwriting Recognition with Confidence
+                                Calibration
+                            </h1>
+                            <p class="lead text-center">
+                                Upload a handwritten Telugu image to recognize
+                                the text and see how confident the model is
+                                about its prediction.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Left Column: Upload and Controls -->
+                <div class="col-lg-6">
+                    <!-- Upload Card -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white py-3">
+                            <h4 class="mb-0">
+                                <i class="fas fa-upload me-2"></i> Upload Image
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-area" id="upload-area">
+                                <div
+                                    class="upload-prompt text-center p-5"
+                                    id="upload-prompt"
+                                >
+                                    <i
+                                        class="fas fa-cloud-upload-alt fa-4x text-primary mb-3"
+                                    ></i>
+                                    <h5>Drag & Drop an image here</h5>
+                                    <p class="text-muted mb-3">or</p>
+                                    <div class="d-flex justify-content-center">
+                                        <button
+                                            id="upload-button"
+                                            class="btn btn-primary me-2"
+                                        >
+                                            <i
+                                                class="fas fa-file-upload me-2"
+                                            ></i>
+                                            Browse Files
+                                        </button>
+                                        <button
+                                            id="camera-button"
+                                            class="btn btn-outline-primary"
+                                        >
+                                            <i class="fas fa-camera me-2"></i>
+                                            Use Camera
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        id="file-input"
+                                        accept="image/*"
+                                        hidden
+                                    />
+                                </div>
+                                <div
+                                    id="preview-container"
+                                    class="preview-container d-none"
+                                >
+                                    <img
+                                        id="preview-image"
+                                        class="img-fluid"
+                                        src=""
+                                    />
+                                    <div
+                                        class="preview-controls mt-3 d-flex justify-content-between"
+                                    >
+                                        <button
+                                            id="reset-button"
+                                            class="btn btn-outline-danger"
+                                        >
+                                            <i class="fas fa-times me-2"></i>
+                                            Reset
+                                        </button>
+                                        <button
+                                            id="recognize-button"
+                                            class="btn btn-success"
+                                        >
+                                            <i class="fas fa-magic me-2"></i>
+                                            Recognize Text
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Camera Modal -->
+                    <div class="modal fade" id="camera-modal" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Take a Photo</h5>
+                                    <button
+                                        type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"
+                                    ></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="camera-container">
+                                        <video
+                                            id="camera-view"
+                                            class="w-100"
+                                            autoplay
+                                        ></video>
+                                        <canvas
+                                            id="camera-canvas"
+                                            class="d-none"
+                                        ></canvas>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button
+                                        type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        id="capture-button"
+                                        class="btn btn-primary"
+                                    >
+                                        <i class="fas fa-camera me-2"></i>
+                                        Capture
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Card -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white py-3">
+                            <h4 class="mb-0">
+                                <i class="fas fa-cog me-2"></i> Recognition
+                                Settings
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label
+                                    for="confidence-method"
+                                    class="form-label"
+                                    >Confidence Estimation Method</label
+                                >
+                                <select
+                                    class="form-select"
+                                    id="confidence-method"
+                                >
+                                    <option value="step_dependent" selected>
+                                        Step-Dependent Temperature Scaling
+                                    </option>
+                                    <option value="temperature">
+                                        Temperature Scaling
+                                    </option>
+                                    <option value="mc_dropout">
+                                        Monte Carlo Dropout
+                                    </option>
+                                    <option value="uncalibrated">
+                                        Uncalibrated
+                                    </option>
+                                </select>
+                                <div class="form-text">
+                                    Different methods for estimating prediction
+                                    confidence.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sample Images Card -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h4 class="mb-0">
+                                <i class="fas fa-images me-2"></i> Sample Images
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="sample-images row row-cols-3 g-2">
+                                {% for image in sample_images %}
+                                <div class="col">
+                                    <div class="sample-image-container">
+                                        <img
+                                            src="{{ url_for('static', filename='samples/' + image) }}"
+                                            class="img-thumbnail sample-image"
+                                            data-filename="{{ image }}"
+                                            alt="Sample Telugu handwriting"
+                                        />
+                                    </div>
+                                </div>
+                                {% endfor %} {% if not sample_images %}
+                                <p class="text-muted">
+                                    No sample images available
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Results -->
+                <div class="col-lg-6">
+                    <!-- Results Card -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white py-3">
+                            <h4 class="mb-0">
+                                <i class="fas fa-poll-h me-2"></i> Recognition
+                                Results
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div
+                                id="results-loading"
+                                class="text-center py-5 d-none"
+                            >
+                                <div
+                                    class="spinner-border text-primary"
+                                    role="status"
+                                >
+                                    <span class="visually-hidden"
+                                        >Loading...</span
+                                    >
+                                </div>
+                                <p class="mt-3">Processing your image...</p>
+                            </div>
+
+                            <div id="results-empty" class="text-center py-5">
+                                <i
+                                    class="fas fa-search fa-4x text-muted mb-3"
+                                ></i>
+                                <h5 class="text-muted">
+                                    Recognition results will appear here
+                                </h5>
+                                <p class="text-muted">
+                                    Upload an image to get started
+                                </p>
+                            </div>
+
+                            <div
+                                id="results-error"
+                                class="text-center py-5 d-none"
+                            >
+                                <i
+                                    class="fas fa-exclamation-triangle fa-4x text-danger mb-3"
+                                ></i>
+                                <h5 class="text-danger">
+                                    Error Processing Image
+                                </h5>
+                                <p id="error-message" class="text-danger">
+                                    Please try another image
+                                </p>
+                            </div>
+
+                            <div id="results-content" class="d-none">
+                                <!-- Recognized Text -->
+                                <div class="mb-4">
+                                    <h5 class="border-bottom pb-2">
+                                        Recognized Text
+                                    </h5>
+                                    <div
+                                        class="recognized-text-container p-3 bg-light rounded"
+                                    >
+                                        <p
+                                            id="recognized-text"
+                                            class="h3 mb-0 text-center"
+                                        ></p>
+                                    </div>
+                                </div>
+
+                                <!-- Overall Confidence -->
+                                <div class="mb-4">
+                                    <h5 class="border-bottom pb-2">
+                                        Overall Confidence
+                                    </h5>
+                                    <div class="text-center">
+                                        <div class="confidence-gauge">
+                                            <div
+                                                class="progress"
+                                                style="height: 24px"
+                                            >
+                                                <div
+                                                    id="confidence-bar"
+                                                    class="progress-bar"
+                                                    role="progressbar"
+                                                ></div>
+                                            </div>
+                                            <p class="mt-2">
+                                                <span
+                                                    id="confidence-value"
+                                                    class="fw-bold"
+                                                ></span>
+                                                <span
+                                                    class="text-muted ms-2"
+                                                    id="confidence-label"
+                                                ></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Character Confidence Heatmap -->
+                                <div class="mb-4">
+                                    <h5 class="border-bottom pb-2">
+                                        Character Confidence
+                                    </h5>
+                                    <div class="text-center">
+                                        <div id="confidence-heatmap-container">
+                                            <img
+                                                id="confidence-heatmap"
+                                                class="img-fluid"
+                                                src=""
+                                            />
+                                        </div>
+                                        <p class="text-muted mt-2">
+                                            <small
+                                                >Colors indicate confidence
+                                                levels: Green (high) to Red
+                                                (low)</small
+                                            >
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Method Details -->
+                                <div>
+                                    <h5 class="border-bottom pb-2">
+                                        Method Details
+                                    </h5>
+                                    <div id="method-details" class="px-3">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div id="about-section" class="row mt-5">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h3 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i> About
+                                the Project
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="lead">
+                                This project demonstrates a Telugu handwriting
+                                recognition system with confidence calibration.
+                            </p>
+
+                            <h4 class="mt-4">How It Works</h4>
+                            <p>
+                                Our system uses a Convolutional Recurrent Neural
+                                Network (CRNN) trained on Telugu handwritten
+                                data. The model not only recognizes the text but
+                                also estimates how confident it is about each
+                                prediction.
+                            </p>
+
+                            <h4 class="mt-4">Confidence Calibration Methods</h4>
+                            <div class="row g-4 mt-2">
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                Temperature Scaling
+                                            </h5>
+                                            <p class="card-text">
+                                                A simple but effective
+                                                post-processing technique that
+                                                applies a single scalar
+                                                parameter (temperature) to the
+                                                model's logits to improve
+                                                calibration.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                Step-Dependent Temperature
+                                                Scaling
+                                            </h5>
+                                            <p class="card-text">
+                                                An enhanced version of
+                                                temperature scaling that applies
+                                                different temperature values to
+                                                different positions in the
+                                                sequence to better handle
+                                                position-specific calibration
+                                                needs.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                Monte Carlo Dropout
+                                            </h5>
+                                            <p class="card-text">
+                                                Uses dropout at inference time
+                                                to generate multiple
+                                                predictions, providing estimates
+                                                of both epistemic (model) and
+                                                aleatoric (data) uncertainty.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                Uncalibrated
+                                            </h5>
+                                            <p class="card-text">
+                                                Raw softmax probabilities from
+                                                the model without any
+                                                calibration, often overconfident
+                                                in its predictions.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="bg-light py-4 mt-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-0">
+                            &copy; 2023 Telugu Handwriting Recognition Project
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <a
+                            href="#"
+                            class="text-decoration-none text-muted me-3"
+                        >
+                            <i class="fas fa-arrow-up me-1"></i> Back to Top
+                        </a>
+                        <a
+                            href="https://github.com/yourusername/telugu-hwr"
+                            class="text-decoration-none text-muted"
+                            target="_blank"
+                        >
+                            <i class="fab fa-github me-1"></i> View on GitHub
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Bootstrap JS Bundle -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- Anime.js for animations -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+        <!-- Custom JavaScript -->
+        <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    </body>
+</html>
