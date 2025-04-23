@@ -18,11 +18,18 @@ from utils.ctc_decoder import CTCLabelConverter
 from trainers.crnn_trainer import CRNNTrainer
 from utils.visualization import plot_training_history
 
-# Configure logging
+# Create logs directory if it doesn't exist
+os.makedirs('logs', exist_ok=True)
+
+# Configure logging to both console and file
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+        logging.FileHandler('logs/crnn_training.log'),  # Log to file
+        logging.StreamHandler()  # Log to console
+    ]
 )
 logger = logging.getLogger(__name__)
 
