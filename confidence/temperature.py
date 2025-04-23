@@ -27,7 +27,7 @@ class TemperatureScaler(ConfidenceEstimator):
         self.temperature = nn.Parameter(torch.ones(1).to(device))
         self.calibrated = False
 
-    def calibrate(self, valid_loader, min_temp=0.1, max_temp=5.0, num_temps=20):
+    def calibrate(self, valid_loader, min_temp=0.1, max_temp=2.0, num_temps=20):
         """
         Calibrate temperature using grid search to minimize ECE.
 

@@ -74,17 +74,19 @@ def main(args):
             logger.info("Using standard CRNN model")
     elif args.model_type == 'parseq':
         model = PARSeq(
-            vocab_size=len(vocab),
+            vocab_size=90,  # Instead of len(vocab)
+            max_label_length=35,  # Use 35 instead of args.max_length
             img_size=(args.img_height, args.img_width),
-            patch_size=(8, 4),
-            in_channels=1,
             embed_dim=384,
             encoder_num_layers=12,
-            num_heads=8,
-            hidden_dim=1536,
-            max_seq_len=args.max_length,
-            num_permutations=args.num_permutations,
-            dropout=args.dropout
+            encoder_num_heads=6,
+            decoder_num_layers=6,  # Use 6 decoder layers
+            decoder_num_heads=8,
+            decoder_mlp_ratio=4.0,
+            dropout=args.dropout,
+            sos_idx=1,
+            eos_idx=2,
+            pad_idx=0
         )
         logger.info("Using PARSeq model")
     else:
@@ -137,12 +139,14 @@ def main(args):
                 logits = model(images)
                 predictions = converter.decode(logits)
             elif args.model_type == 'parseq':
-                outputs = model(images, train=False)
-                predictions = []
-                for pred in outputs["predictions"]:
-                    text = ''.join(converter.idx2char.get(idx.item(), '')
-                                 for idx in pred if idx.item() != converter.blank_idx)
-                    predictions.append(text)
+                from utils.tokenizer import PARSeqTokenizer
+
+                parseq_tokenizer = PARSeqTokenizer(''.join(sorted(vocab)), max_length=args.max_length)
+
+                outputs = model(images)
+
+                # Use the PARSeq tokenizer to decode
+                predictions = parseq_tokenizer.decode(outputs['logits'])
 
             # Store predictions and targets
             all_predictions.extend(predictions)

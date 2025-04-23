@@ -19,18 +19,19 @@ telugu-hwr/
 │   ├── mc_dropout_crnn.py     # CRNN with Monte Carlo dropout
 │   └── parseq.py              # PARSeq model
 │
-├── confidence/                # Confidence estimation methods
+├── confidence_v2/             # Enhanced confidence estimation methods
 │   ├── base.py                # Base confidence estimator
-│   ├── calibration.py         # Calibration metrics
-│   ├── temperature.py         # Temperature scaling
 │   ├── mc_dropout.py          # Monte Carlo dropout
-│   ├── combined.py            # Combined confidence estimator
-│   └── uncalibrated.py        # Uncalibrated confidence
+│   ├── step_dependent_temperature_scaling.py # Position-specific calibration
+│   ├── temperature_scaling.py # Temperature scaling
+│   ├── uncalibrated.py        # Uncalibrated confidence
+│   └── visualization.py       # Calibration visualization utilities
 │
 ├── utils/                     # Utility functions
 │   ├── ctc_decoder.py         # CTC decoder
 │   ├── metrics.py             # Evaluation metrics
-│   └── visualization.py       # Visualization utilities
+│   ├── tokenizer.py           # Tokenizer for PARSeq model
+│   └── visualization.py       # Result visualization utilities
 │
 ├── trainers/                  # Model trainers
 │   ├── base_trainer.py        # Base trainer
@@ -41,10 +42,29 @@ telugu-hwr/
 │   ├── train_crnn.py          # Train CRNN model
 │   ├── train_parseq.py        # Train PARSeq model
 │   ├── evaluate.py            # Evaluate models
-│   └── evaluate_confidence.py # Evaluate confidence methods
+│   ├── evaluate_confidence_v2.py # Enhanced confidence evaluation
+│   └── test_structure.py      # Test code structure functionality
 │
-└── configs/                   # Configuration files
+└── requirements.txt           # Project dependencies
 ```
+
+## Key Features
+
+- **Multiple Model Architectures**:
+  - CRNN with CTC loss for sequence recognition
+  - PARSeq (Permuted Autoregressive Sequence) model with transformer architecture
+
+- **Advanced Confidence Calibration**:
+  - Temperature Scaling for basic calibration
+  - Monte Carlo Dropout for uncertainty estimation
+  - Step-Dependent Temperature Scaling for position-specific calibration
+  - Length-normalized confidence scores (geometric mean) for better sequence confidence
+
+- **Comprehensive Evaluation**:
+  - Character Error Rate (CER) and Word Error Rate (WER) metrics
+  - Expected Calibration Error (ECE) and Maximum Calibration Error (MCE)
+  - Brier Score for probabilistic assessment
+  - Visualization tools for calibration analysis
 
 ## Setup
 
@@ -72,13 +92,11 @@ The system expects data in the following format:
 
 ```bash
 python scripts/train_crnn.py \
-    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
+    --data_root "/path/to/dataset" \
     --train_file train.txt \
     --val_file val.txt \
-    --vocab_file ../output/vocabulary.txt \
-    --output_dir ../output/crnn \
-    --max_samples 100 \
-    --val_samples 20 \
+    --vocab_file output/vocabulary.txt \
+    --output_dir output/crnn \
     --img_height 64 \
     --img_width 256 \
     --batch_size 32 \
@@ -87,7 +105,7 @@ python scripts/train_crnn.py \
     --cuda
 ```
 
-Add `--mc_dropout` flag to train with Monte Carlo dropout for uncertainty estimation.
+<!-- Add `--mc_dropout` flag to train with Monte Carlo dropout for uncertainty estimation. -->
 
 ### PARSeq Model
 
@@ -96,16 +114,14 @@ python scripts/train_parseq.py \
     --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
     --train_file train.txt \
     --val_file val.txt \
-    --vocab_file ../output/vocabulary.txt \
-    --output_dir ../output/parseq \
-    --max_samples 100 \
-    --val_samples 20 \
+    --vocab_file output/vocabulary.txt \
+    --output_dir output/parseq \
     --img_height 32 \
     --img_width 128 \
     --max_length 35 \
     --num_permutations 6 \
     --batch_size 32 \
-    --epochs 1 \
+    --epochs 30 \
     --learning_rate 0.0007 \
     --cuda
 ```
@@ -116,33 +132,62 @@ python scripts/train_parseq.py \
 
 ```bash
 python scripts/evaluate.py \
-    --data_root "/home/pankaj/Desktop/698r project/datasets/telugu datset" \
+    --data_root "/path/to/dataset" \
     --test_file test.txt \
-    --vocab_file ../output/crnn/vocabulary.txt \
-    --model_path ../output/crnn/best_cer_model.pth \
+    --vocab_file output/vocabulary.txt \
+    --model_path output/crnn/best_cer_model.pth \
     --model_type crnn \
-    --output_dir ../output/evaluation/crnn \
+    --output_dir output/evaluation/crnn \
     --cuda
 ```
 
 For PARSeq models, use `--model_type parseq`.
 
-### Confidence Evaluation
+### Confidence Calibration Evaluation
 
 ```bash
-python scripts/evaluate_confidence.py \
-    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
+python scripts/evaluate_confidence_v2.py \
+    --data_root "/path/to/dataset" \
     --val_file val.txt \
     --test_file test.txt \
-    --test_samples 1000 \
-    --val_samples 200 \
-    --vocab_file ./output/vocabulary.txt \
-    --model_path ./output/crnn/best_cer_model.pth \
-    --output_dir ./output/confidence_evaluation \
+    --vocab_file output/vocabulary.txt \
+    --model_path output/crnn/best_cer_model.pth \
+    --output_dir output/confidence_evaluation_v2 \
     --batch_size 32 \
-    --dropout_rate 0.2 \
-    --calib_level word \
+    --num_samples 30 \  # For MC Dropout sampling
+    --prediction_source "Step Dependent T-Scaling" \  # Options: best_confidence, ensemble, or specific method name
     --cuda
+```
+
+## Results and Visualizations
+
+After running the evaluation scripts, you can find various visualizations in the specified output directory:
+
+- **Reliability Diagrams**: Show the relationship between confidence and accuracy
+- **Temperature vs. ECE Curves**: For temperature scaling optimization
+- **Position-specific Temperature Values**: For Step-Dependent Temperature Scaling
+- **Calibration Comparison**: Comparing different calibration methods
+
+## Creating a Vocabulary File
+
+If you don't have a vocabulary file, you can generate one from your dataset using the data analysis tools:
+
+```bash
+python -c "
+from data.dataset import TeluguHWRDataset
+from data.analysis import analyze_dataset
+import os
+
+data_root = '/path/to/dataset'
+train_dataset = TeluguHWRDataset(
+    data_file=os.path.join(data_root, 'train.txt'),
+    root_dir=data_root,
+    transform=None
+)
+
+vocab = analyze_dataset(train_dataset, save_dir='output')
+print(f'Created vocabulary with {len(vocab)} characters')
+"
 ```
 
 ## Acknowledgements
@@ -150,40 +195,3 @@ python scripts/evaluate_confidence.py \
 - This project was developed as part of research on handwriting recognition with confidence calibration.
 - The PARSeq implementation is based on the paper "Scene Text Recognition with Permuted Autoregressive Sequence Models" by Bautista et al.
 ```
-
-## Testing the Restructured Code
-
-To test the restructured code, you can run the test script:
-
-```python
-# telugu-hwr/scripts/test_structure.py
-# (Already implemented above)
-```
-
-Make sure to update the paths in the script to point to your data before running:
-
-```bash
-cd telugu-hwr
-python scripts/test_structure.py
-```
-
-This will perform a small training run to ensure all components are working together properly.
-
-## Conclusion
-
-You have now completed the full restructuring of the Telugu Handwriting Recognition project. The new structure is modular, maintainable, and follows good software engineering practices:
-
-1. Clear separation of concerns with modules for data, models, confidence estimation, training, and evaluation
-2. Well-documented code with docstrings explaining purpose and parameters
-3. Consistent interfaces between components
-4. Command-line scripts for easy use
-5. Comprehensive README with usage instructions
-
-To fully complete the project, you might want to also:
-
-1. Create a `requirements.txt` file listing all dependencies
-2. Add more detailed documentation for specific components
-3. Include example configurations for different scenarios
-4. Add unit tests for critical components
-
-This restructured project should be much easier to maintain, extend, and use for future research or applications.
