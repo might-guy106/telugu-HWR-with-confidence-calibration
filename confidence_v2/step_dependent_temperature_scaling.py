@@ -27,16 +27,13 @@ class StepDependentTemperatureScaling(ConfidenceEstimator):
         initial_temp: Initial temperature value for all positions
     """
 
-    def __init__(self, model, device, converter, max_seq_len=50, tau=10, initial_temp=1.0, normalize_confidence=True):
-        # Pass normalize_confidence to the parent class
-        super().__init__(model, device, converter, normalize_confidence)
+    def __init__(self, model, device, converter, max_seq_len=50, tau=10, initial_temp=1.0, agg_method='geometric_mean'):
+        super().__init__(model, device, converter, agg_method)
         self.name = "Step Dependent T-Scaling"
         self.max_seq_len = max_seq_len
-        self.tau = min(tau, max_seq_len)  # Ensure tau doesn't exceed max_seq_len
+        self.tau = min(tau, max_seq_len)
 
-        # Initialize temperature parameters:
-        # - One for each position up to tau
-        # - One shared parameter for all positions beyond tau
+        # Initialize temperature parameters
         self.temperatures = nn.Parameter(
             torch.ones(self.tau + 1, device=device) * initial_temp
         )
@@ -168,12 +165,13 @@ class StepDependentTemperatureScaling(ConfidenceEstimator):
         print(f"Confidence type used: {conf_type}")
         return best_temps.cpu().numpy()
 
-    def get_confidence(self, images):
+    def get_confidence(self, images, agg_method=None):
         """
         Get calibrated confidence scores using step-dependent temperature scaling.
 
         Args:
             images: Input image batch
+            agg_method: Aggregation method for confidence scores
 
         Returns:
             Dictionary with predictions and confidence scores
@@ -209,16 +207,16 @@ class StepDependentTemperatureScaling(ConfidenceEstimator):
             # Get sequence probabilities for this batch item
             seq_probs = max_probs[:, b]
 
-           # Calculate confidence using base class method
-            confidence = self.calculate_confidence(seq_probs)
-
+            # Calculate confidence with specified aggregation method
+            confidence = self.calculate_confidence(seq_probs, agg_method)
             confidences.append(confidence)
 
         return {
             'predictions': decoded,
             'confidences': confidences,
-            'temperatures': self.temperatures.detach().cpu().numpy(),  # Added detach() here
-            'method': self.name
+            'temperatures': self.temperatures.detach().cpu().numpy(),
+            'method': self.name,
+            'agg_method': agg_method or self.agg_method
         }
 
     def _calculate_ece(self, confidences, correctness, num_bins=10):

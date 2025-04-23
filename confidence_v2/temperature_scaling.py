@@ -22,14 +22,13 @@ class TemperatureScaling(ConfidenceEstimator):
         converter: Converter to convert logits to probabilities
         normalize_confidence: Whether to use length-normalized confidence
     """
-    def __init__(self, model, device, converter, normalize_confidence=True):
-        super().__init__(model, device, converter)
+    def __init__(self, model, device, converter, agg_method='geometric_mean'):
+        super().__init__(model, device, converter, agg_method)
         self.name = "Temperature Scaling"
         self.temperature = nn.Parameter(torch.ones(1).to(device))
         self.calibrated = False
-        self.normalize_confidence = normalize_confidence
 
-    def calibrate(self, val_loader, min_temp=1.0, max_temp=1.5, num_temps=10):
+    def calibrate(self, val_loader, min_temp=1, max_temp=10, num_temps=10):
         """
         Calibrate temperature using grid search to minimize ECE.
 
@@ -123,12 +122,13 @@ class TemperatureScaling(ConfidenceEstimator):
         self.calibrated = True
         return best_temp
 
-    def get_confidence(self, images):
+    def get_confidence(self, images, agg_method=None):
         """
         Get calibrated confidence scores for predictions.
 
         Args:
             images: Input image batch
+            agg_method: Aggregation method for confidence
 
         Returns:
             Dictionary with decoded texts and confidence scores
@@ -159,15 +159,16 @@ class TemperatureScaling(ConfidenceEstimator):
             # Get sequence probabilities for this batch item
             seq_probs = max_probs[:, b]
 
-            # Calculate confidence
-            confidence = self.calculate_confidence(seq_probs)
+            # Calculate confidence with specified aggregation method
+            confidence = self.calculate_confidence(seq_probs, agg_method)
             confidences.append(confidence)
 
         return {
             'predictions': decoded,
             'confidences': confidences,
             'temperature': self.temperature.item(),
-            'method': self.name
+            'method': self.name,
+            'agg_method': agg_method or self.agg_method
         }
 
     def _calculate_ece(self, confidences, correctness, num_bins=10):

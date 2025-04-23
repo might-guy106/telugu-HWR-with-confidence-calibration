@@ -7,20 +7,18 @@ from .base import ConfidenceEstimator
 
 class MCDropoutConfidence(ConfidenceEstimator):
     """
-    Monte Carlo Dropout for confidence/uncertainty estimation.
+    Monte Carlo Dropout for epistemic uncertainty estimation.
 
     This method performs multiple forward passes with dropout enabled,
-    resulting in an ensemble of predictions that can be used to estimate
-    the model's uncertainty.
+    resulting in an ensemble of predictions that estimate the model's
+    epistemic uncertainty (what the model doesn't know).
 
-    Args:
-        model: Model with dropout layers
-        device: Device to run inference on (cuda/cpu)
-        converter: Label converter for decoding predictions
-        num_samples: Number of Monte Carlo samples to generate
+    Note: This implementation only captures epistemic uncertainty (model uncertainty),
+    not aleatoric uncertainty (data noise). For aleatoric uncertainty, the model would
+    need to be specifically trained to predict variance/noise.
     """
-    def __init__(self, model, device, converter, num_samples=30, normalize_confidence=True):
-        super().__init__(model, device, converter, normalize_confidence)
+    def __init__(self, model, device, converter, num_samples=30, agg_method='geometric_mean'):
+        super().__init__(model, device, converter, agg_method)
         self.name = "MC Dropout"
         self.num_samples = num_samples
         self.calibrated = True  # MC Dropout doesn't need explicit calibration
@@ -28,9 +26,6 @@ class MCDropoutConfidence(ConfidenceEstimator):
     def calibrate(self, val_loader):
         """
         MC Dropout doesn't need explicit calibration.
-
-        Args:
-            val_loader: Validation data loader (not used)
         """
         # Verify the model has dropout layers
         has_dropout = False
@@ -45,16 +40,18 @@ class MCDropoutConfidence(ConfidenceEstimator):
             print(f"Model has dropout layers, MC Dropout is ready with {self.num_samples} samples")
 
         self.calibrated = True
+        return None  # No calibration parameters to save
 
-    def get_confidence(self, images):
+    def get_confidence(self, images, agg_method=None):
         """
-        Estimate confidence and uncertainty using Monte Carlo Dropout.
+        Estimate confidence and epistemic uncertainty using Monte Carlo Dropout.
 
         Args:
             images: Input image batch [batch_size, channels, height, width]
+            agg_method: Aggregation method for confidence
 
         Returns:
-            Dictionary with prediction and confidence information
+            Dictionary with prediction and uncertainty information
         """
         images = images.to(self.device)
         batch_size = images.size(0)
@@ -96,13 +93,13 @@ class MCDropoutConfidence(ConfidenceEstimator):
         # Calculate confidence metrics
         confidences = []
         epistemic_uncertainties = []  # Model uncertainty
-        aleatoric_uncertainties = []  # Data uncertainty
         prediction_distributions = []
 
         # Process each sample in the batch
         for b in range(batch_size):
-            # Word-level confidence
-            # Count prediction occurrences for this sample
+            # Word-level confidence - two approaches:
+
+            # 1. Distribution of predictions (predictive entropy)
             sample_predictions = [decoded[b] for decoded in all_decoded]
             prediction_counts = Counter(sample_predictions)
 
@@ -111,36 +108,31 @@ class MCDropoutConfidence(ConfidenceEstimator):
             most_common_pred, most_common_count = most_common
 
             # Calculate prediction probability (most common count / total samples)
-            confidence = most_common_count / self.num_samples
+            pred_conf = most_common_count / self.num_samples
+
+            # 2. Character-level aggregation with selected method
+            # Get sequence probabilities from mean predictions
+            seq_probs = mean_probs[:, b].max(dim=1)[0]
+            char_conf = self.calculate_confidence(seq_probs, agg_method)
+
+            # Use the more conservative confidence estimate
+            confidence = min(pred_conf, char_conf)
             confidences.append(confidence)
 
             # Store distribution of predictions for this sample
             prediction_distributions.append(dict(prediction_counts))
 
-            # Calculate uncertainties
-            # Epistemic uncertainty: variance of probability predictions across samples
+            # Calculate epistemic uncertainty
             sample_probs = stacked_probs[:, :, b, :]  # [num_samples, seq_len, vocab_size]
             var_probs = torch.var(sample_probs, dim=0)  # [seq_len, vocab_size]
             epistemic = torch.mean(var_probs).item()  # Average over sequence and vocab
             epistemic_uncertainties.append(epistemic)
 
-            # Aleatoric uncertainty: expected entropy of predictions
-            entropies = []
-            for s in range(self.num_samples):
-                # Calculate entropy of each prediction
-                sample_prob = sample_probs[s]  # [seq_len, vocab_size]
-                entropy = -torch.sum(sample_prob * torch.log(sample_prob + 1e-10), dim=1)  # [seq_len]
-                mean_entropy = torch.mean(entropy).item()  # Average over sequence
-                entropies.append(mean_entropy)
-
-            aleatoric = np.mean(entropies)
-            aleatoric_uncertainties.append(aleatoric)
-
         return {
             'predictions': mean_decoded,
             'confidences': confidences,
             'epistemic_uncertainties': epistemic_uncertainties,
-            'aleatoric_uncertainties': aleatoric_uncertainties,
             'prediction_distributions': prediction_distributions,
-            'method': self.name
+            'method': self.name,
+            'explanation':  "MC Dropout estimates only epistemic uncertainty (model uncertainty)"
         }

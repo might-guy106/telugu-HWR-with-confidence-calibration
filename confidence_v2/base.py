@@ -7,81 +7,36 @@ from abc import ABC, abstractmethod
 class ConfidenceEstimator(ABC):
     """
     Base class for confidence estimators.
-
-    This class defines the interface that all confidence estimators must implement.
-    It provides common functionality and ensures consistent behavior across different
-    confidence estimation methods.
-
-    Args:
-        model: The model used for predictions
-        device: Device to run inference on (cuda/cpu)
-        converter: Converter for decoding predictions
-        normalize_confidence: Whether to normalize confidence scores
     """
-    def __init__(self, model, device, converter, normalize_confidence=True):
+    def __init__(self, model, device, converter, agg_method='geometric_mean'):
         self.model = model
         self.device = device
         self.converter = converter
         self.calibrated = False
         self.name = "BaseEstimator"
-        self.normalize_confidence = normalize_confidence
+        self.agg_method = agg_method
 
     @abstractmethod
     def calibrate(self, val_loader):
-        """
-        Calibrate the confidence estimator using validation data.
-
-        Args:
-            val_loader: Validation data loader
-        """
+        """Calibrate the confidence estimator using validation data."""
         pass
 
     @abstractmethod
-    def get_confidence(self, images):
-        """
-        Get confidence scores for predictions.
-
-        Args:
-            images: Input data (e.g., images)
-
-        Returns:
-            Dictionary with predictions and confidence scores
-        """
+    def get_confidence(self, images, agg_method=None):
+        """Get confidence scores for predictions."""
         pass
 
-    def predict(self, images):
-        """
-        Make predictions with confidence scores.
-
-        Args:
-            images: Input data (e.g., images)
-
-        Returns:
-            Dictionary with predictions and confidence scores
-        """
-        return self.get_confidence(images)
+    def predict(self, images, agg_method=None):
+        """Make predictions with confidence scores."""
+        return self.get_confidence(images, agg_method)
 
     def enable_dropout(self, m):
-        """
-        Enable dropout during inference for a model module.
-
-        Args:
-            m: Model module
-        """
+        """Enable dropout during inference for a model module."""
         if type(m) == torch.nn.Dropout or type(m) == torch.nn.Dropout2d:
             m.train()
 
     def _get_model_predictions(self, images, apply_dropout=False):
-        """
-        Get raw model predictions.
-
-        Args:
-            images: Input images
-            apply_dropout: Whether to apply dropout during inference
-
-        Returns:
-            Model outputs and decoded predictions
-        """
+        """Get raw model predictions."""
         # Move images to device
         images = images.to(self.device)
 
@@ -101,26 +56,34 @@ class ConfidenceEstimator(ABC):
 
         return outputs, decoded
 
-    # Add a utility method to calculate confidence
-    def calculate_confidence(self, seq_probs):
+    def calculate_confidence(self, seq_probs, agg_method=None):
         """
-        Calculate confidence based on sequence probabilities.
+        Calculate confidence based on sequence probabilities using one of three methods.
 
         Args:
             seq_probs: Sequence probabilities tensor
+            agg_method: Aggregation method ('geometric_mean', 'product', or 'min')
 
         Returns:
             Confidence score
         """
-        if self.normalize_confidence:
+        # Use provided method or default from instance
+        method = agg_method or self.agg_method
+
+        if method == 'geometric_mean':
             # Length-normalized confidence (geometric mean)
             log_probs = torch.log(seq_probs + 1e-10)
             avg_log_prob = torch.mean(log_probs)
             confidence = torch.exp(avg_log_prob).item()
-        else:
-            # Product of probabilities (original method)
+        elif method == 'product':
+            # Product of probabilities (unnormalized)
             log_probs = torch.log(seq_probs + 1e-10)
             sum_log_prob = torch.sum(log_probs)
             confidence = torch.exp(sum_log_prob).item()
+        elif method == 'min':
+            # Minimum probability (pessimistic approach)
+            confidence = torch.min(seq_probs).item()
+        else:
+            raise ValueError(f"Unknown aggregation method: {method}")
 
         return confidence

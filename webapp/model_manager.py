@@ -202,7 +202,7 @@ class ModelManager:
         return formatted_result
 
     def _get_character_confidences(self, image_tensor, estimator, prediction):
-        """Extract character-level confidences"""
+        """Extract character-level confidences using improved CTC alignment"""
         with torch.no_grad():
             # Get model output
             logits = self.model(image_tensor.to(self.device))
@@ -219,29 +219,31 @@ class ModelManager:
             else:
                 scaled_logits = logits
 
-            # Convert to probabilities
+            # Get predictions with character-level confidences and positions
+            decoded_results = self.converter.decode_with_confidence(scaled_logits)
+
+            if len(decoded_results) > 0:
+                decoded_text, char_confidences, char_positions = decoded_results[0]
+
+                # If our decoded text matches the prediction, use its confidences
+                if decoded_text == prediction:
+                    return char_confidences
+
+            # Fallback to the old method if there's a mismatch
             probs = torch.nn.functional.softmax(scaled_logits, dim=2)
-
-            # Get max probability at each timestep
             max_probs, _ = probs.max(2)
-            max_probs = max_probs[:, 0].cpu().numpy()  # Get batch index 0
+            max_probs = max_probs[:, 0].cpu().numpy()
 
-            # Convert CTC output to character confidences
-            # This is a simplified approach as CTC might merge characters
-            char_confidences = []
-
-            # Match CTC output length to prediction length
-            # This is a simplified approach - in reality, the alignment is more complex
+            # Simple linear interpolation
             if len(prediction) > 0:
-                # Simple linear interpolation to match sequence length to prediction length
                 confidence_values = np.interp(
                     np.linspace(0, len(max_probs) - 1, len(prediction)),
                     np.arange(len(max_probs)),
                     max_probs
                 )
-                char_confidences = confidence_values.tolist()
-
-            return char_confidences
+                return confidence_values.tolist()
+            else:
+                return []
 
     def _generate_confidence_heatmap(self, text, confidences):
         """Generate a heatmap visualization of character confidences"""

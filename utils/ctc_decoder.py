@@ -1,5 +1,6 @@
 import torch
 from collections import defaultdict
+from utils.ctc_alignment import decode_with_timestamps
 
 class CTCLabelConverter:
     """
@@ -161,3 +162,19 @@ class CTCLabelConverter:
             prev_idx = idx if idx != self.blank_idx else prev_idx
 
         return ''.join(result)
+
+    def decode_with_confidence(self, output):
+        """
+        Decode model output to text with character-level confidences and positions.
+
+        Args:
+            output: Tensor of shape [seq_len, batch_size, vocab_size]
+
+        Returns:
+            List of tuples (decoded_text, character_confidences, character_positions)
+        """
+        # Apply softmax to get probabilities
+        probs = torch.softmax(output, dim=2)
+
+        # Decode with timestamps
+        return decode_with_timestamps(probs, self)

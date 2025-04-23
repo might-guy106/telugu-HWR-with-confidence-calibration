@@ -15,7 +15,7 @@ from data.dataset import TeluguHWRDataset
 from data.transforms import get_transforms
 from models.crnn import CRNN
 from models.mc_dropout_crnn import MCDropoutCRNN
-from models.parseq import PARSeq
+# from models.parseq import PARSeq
 from utils.ctc_decoder import CTCLabelConverter
 from utils.metrics import calculate_metrics
 from utils.visualization import plot_confusion_matrix, plot_error_distribution

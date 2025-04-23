@@ -132,7 +132,7 @@ python scripts/train_parseq.py \
 
 ```bash
 python scripts/evaluate.py \
-    --data_root "/path/to/dataset" \
+    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
     --test_file test.txt \
     --vocab_file output/vocabulary.txt \
     --model_path output/crnn/best_cer_model.pth \
@@ -146,16 +146,16 @@ For PARSeq models, use `--model_type parseq`.
 ### Confidence Calibration Evaluation
 
 ```bash
-python scripts/evaluate_confidence_v2.py \
-    --data_root "/path/to/dataset" \
+python scripts/evaluate_confidence.py \
+    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
     --val_file val.txt \
     --test_file test.txt \
     --vocab_file output/vocabulary.txt \
     --model_path output/crnn/best_cer_model.pth \
-    --output_dir output/confidence_evaluation_v2 \
-    --batch_size 32 \
-    --num_samples 30 \  # For MC Dropout sampling
-    --prediction_source "Step Dependent T-Scaling" \  # Options: best_confidence, ensemble, or specific method name
+    --output_dir output/confidence_evaluation_v8 \
+    --batch_size 16 \
+    --num_samples 30 \
+    --agg_method min \
     --cuda
 ```
 
