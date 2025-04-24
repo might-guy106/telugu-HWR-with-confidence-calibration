@@ -27,8 +27,9 @@ class TemperatureScaling(ConfidenceEstimator):
         self.name = "Temperature Scaling"
         self.temperature = nn.Parameter(torch.ones(1).to(device))
         self.calibrated = False
+        self.agg_method = agg_method
 
-    def calibrate(self, val_loader, min_temp=1.0, max_temp=2.0, num_temps=10):
+    def calibrate(self, val_loader, output_dir=None, min_temp=1.0, max_temp=2.0, num_temps=20):
         """
         Calibrate temperature using grid search to minimize ECE.
 
@@ -101,8 +102,12 @@ class TemperatureScaling(ConfidenceEstimator):
                 best_temp = temp
                 print(f"New best temperature: {best_temp:.4f}, ECE: {best_ece:.4f}")
 
-        # Create visualization directory
-        vis_dir = os.path.join(os.getcwd(), 'output', 'confidence_evaluation_v2', 'Temperature_Scaling')
+         # Create visualization of temperatures by position (unchanged)
+        if output_dir:
+            vis_dir = os.path.join(output_dir, 'Temperature_Scaling')
+        else:
+            # Fallback to default path if no output directory is provided
+            vis_dir = os.path.join(os.getcwd(), 'output', 'confidence_evaluation_min', 'Temperature_Scaling')
         os.makedirs(vis_dir, exist_ok=True)
 
         # Plot temperature vs ECE curve

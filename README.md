@@ -258,3 +258,18 @@ python scripts/evaluate_confidence.py \
     --agg_method min \
     --cuda
 ```
+
+
+python scripts/evaluate_confidence.py \
+    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
+    --val_file val.txt \
+    --test_file test.txt \
+    --vocab_file output/vocabulary.txt \
+    --model_path output/crnn/best_cer_model.pth \
+    --output_dir output/confidence_evaluation_min \
+    --batch_size 32 \
+    --test_samples 1000 \
+    --val_samples 1000 \
+    --num_samples 30 \
+    --agg_method min \
+    --cuda
