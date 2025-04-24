@@ -92,7 +92,7 @@ The system expects data in the following format:
 
 ```bash
 python scripts/train_crnn.py \
-    --data_root "/path/to/dataset" \
+    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
     --train_file train.txt \
     --val_file val.txt \
     --vocab_file output/vocabulary.txt \
@@ -100,7 +100,7 @@ python scripts/train_crnn.py \
     --img_height 64 \
     --img_width 256 \
     --batch_size 32 \
-    --epochs 30 \
+    --epochs 20 \
     --learning_rate 0.001 \
     --cuda
 ```
@@ -196,4 +196,65 @@ print(f'Created vocabulary with {len(vocab)} characters')
 
 - This project was developed as part of research on handwriting recognition with confidence calibration.
 - The PARSeq implementation is based on the paper "Scene Text Recognition with Permuted Autoregressive Sequence Models" by Bautista et al.
+```
+
+
+## Temporary
+
+```bash
+python scripts/train_crnn.py \
+    --data_root "/home/GNN-NIDS/pankaj/telugu-hwr/datasets/telugu datset" \
+    --train_file train.txt \
+    --val_file val.txt \
+    --vocab_file output/vocabulary.txt \
+    --output_dir output/crnn \
+    --img_height 64 \
+    --img_width 256 \
+    --batch_size 32 \
+    --epochs 20 \
+    --learning_rate 0.001 \
+    --cuda
+```
+```bash
+python scripts/train_trocr.py \
+    --data_root "/home/GNN-NIDS/pankaj/telugu-hwr/datasets/telugu datset" \
+    --train_file train.txt \
+    --val_file val.txt \
+    --output_dir output/trocr \
+    --pretrained_model "microsoft/trocr-base-handwritten" \
+    --img_height 384 \
+    --img_width 384 \
+    --batch_size 32 \
+    --max_samples 1000 \
+    --val_samples 200 \
+    --epochs 10 \
+    --learning_rate 5e-5 \
+    --cuda
+```
+
+```bash
+python scripts/evaluate.py \
+    --data_root "/home/GNN-NIDS/pankaj/telugu-hwr/datasets/telugu datset" \
+    --test_file test.txt \
+    --vocab_file output/vocabulary.txt \
+    --model_path output/crnn/best_cer_model.pth \
+    --model_type crnn \
+    --output_dir output/evaluation/crnn \
+    --cuda
+```
+
+```bash
+python scripts/evaluate_confidence.py \
+    --data_root "/home/GNN-NIDS/pankaj/telugu-hwr/datasets/telugu datset" \
+    --val_file val.txt \
+    --test_file test.txt \
+    --vocab_file output/vocabulary.txt \
+    --model_path output/crnn/best_cer_model.pth \
+    --output_dir output/confidence_evaluation_min \
+    --batch_size 32 \
+    --test_samples 1000 \
+    --val_samples 1000 \
+    --num_samples 30 \
+    --agg_method min \
+    --cuda
 ```

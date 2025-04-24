@@ -100,13 +100,13 @@ def get_transforms(phase, img_height=64, img_width=256):
             ResizeWithPad(img_height, img_width, pad_value=255),
 
             # Data augmentation (only for training)
-            # transforms.RandomApply([
-            #     ElasticTransform(alpha=30, sigma=3)
-            # ], p=0.5),
-            # transforms.RandomApply([
-            #     transforms.RandomAffine(degrees=3, shear=5,
-            #                            fill=255)
-            # ], p=0.3),
+            transforms.RandomApply([
+                ElasticTransform(alpha=30, sigma=3)
+            ], p=0.5),
+            transforms.RandomApply([
+                transforms.RandomAffine(degrees=3, shear=5,
+                                       fill=255)
+            ], p=0.3),
             # Optional contrast/brightness adjustments
             transforms.RandomApply([
                 transforms.ColorJitter(brightness=0.3, contrast=0.3)
@@ -122,4 +122,40 @@ def get_transforms(phase, img_height=64, img_width=256):
             ResizeWithPad(img_height, img_width, pad_value=255),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.5], std=[0.5])
+        ])
+
+
+def get_trocr_transforms(phase, img_height=384, img_width=384):
+    """
+    Create preprocessing and augmentation pipeline for TrOCR models.
+
+    Args:
+        phase (str): 'train', 'val', or 'test'
+        img_height (int): Target image height
+        img_width (int): Maximum image width
+
+    Returns:
+        transforms.Compose: Composed transformation pipeline
+    """
+    if phase == 'train':
+        return transforms.Compose([
+            # Basic preprocessing
+            ResizeWithPad(img_height, img_width, pad_value=255),
+
+            # Data augmentation (only for training)
+            transforms.RandomApply([
+                transforms.ColorJitter(brightness=0.3, contrast=0.3)
+            ], p=0.3),
+
+            # Convert to tensor - don't normalize here since TrOCR processor will do that
+            transforms.ToTensor(),
+
+            # The processor expects values in [0, 255], but ToTensor scales to [0, 1]
+            # We'll scale back to [0, 255] in the _preprocess_images method
+        ])
+    else:  # val or test
+        return transforms.Compose([
+            # Only basic preprocessing for validation/test
+            ResizeWithPad(img_height, img_width, pad_value=255),
+            transforms.ToTensor(),
         ])
