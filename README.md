@@ -96,33 +96,12 @@ python scripts/train_crnn.py \
     --train_file train.txt \
     --val_file val.txt \
     --vocab_file output/vocabulary.txt \
-    --output_dir output/crnn \
+    --output_dir output2/crnn \
     --img_height 64 \
     --img_width 256 \
     --batch_size 32 \
     --epochs 20 \
     --learning_rate 0.001 \
-    --cuda
-```
-
-<!-- Add `--mc_dropout` flag to train with Monte Carlo dropout for uncertainty estimation. -->
-
-### PARSeq Model
-
-```bash
-python scripts/train_parseq.py \
-    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
-    --train_file train.txt \
-    --val_file val.txt \
-    --vocab_file output/vocabulary.txt \
-    --output_dir output/parseq \
-    --img_height 32 \
-    --img_width 128 \
-    --max_length 35 \
-    --num_permutations 6 \
-    --batch_size 32 \
-    --epochs 30 \
-    --learning_rate 0.0007 \
     --cuda
 ```
 
@@ -141,8 +120,6 @@ python scripts/evaluate.py \
     --cuda
 ```
 
-For PARSeq models, use `--model_type parseq`.
-
 ### Confidence Calibration Evaluation
 
 ```bash
@@ -152,11 +129,10 @@ python scripts/evaluate_confidence.py \
     --test_file test.txt \
     --vocab_file output/vocabulary.txt \
     --model_path output/crnn/best_cer_model.pth \
-    --output_dir output/confidence_evaluation_v8 \
+    --output_dir output/confidence_evaluation_final \
     --batch_size 16 \
     --num_samples 30 \
-    --val_samples 1000 \
-    --test_samples 1000 \
+    --mc_dropout \
     --agg_method min \
     --cuda
 ```
@@ -258,18 +234,3 @@ python scripts/evaluate_confidence.py \
     --agg_method min \
     --cuda
 ```
-
-
-python scripts/evaluate_confidence.py \
-    --data_root "/home/pankaj/Desktop/698r project/my implementations/telugu-hwr/datasets/telugu datset" \
-    --val_file val.txt \
-    --test_file test.txt \
-    --vocab_file output/vocabulary.txt \
-    --model_path output/crnn/best_cer_model.pth \
-    --output_dir output/confidence_evaluation_min \
-    --batch_size 32 \
-    --test_samples 1000 \
-    --val_samples 1000 \
-    --num_samples 30 \
-    --agg_method min \
-    --cuda

@@ -63,7 +63,7 @@ class CTCLabelConverter:
 
     def decode(self, output, output_lengths=None):
         """
-        Decode model output to text with CTC greedy decoding.
+        Decode model output to text with CTC decoding.
 
         Args:
             output: Tensor of shape [seq_len, batch_size, vocab_size]
