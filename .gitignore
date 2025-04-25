@@ -5,7 +5,5 @@ __pycache__/
 *.ckpt
 datasets/
 prompts/
-outputs/
-output/crnn
 webapp/static/uploads
 resources/
