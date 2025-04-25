@@ -1,0 +1,130 @@
+{
+    "method": "Step Dependent T-Scaling",
+    "aggregation_method": "min",
+    "accuracy": 68.2356225572306,
+    "ece": 0.04739919672509535,
+    "mce": 0.1896057288314021,
+    "brier_score": 0.1758480929362539,
+    "examples": [
+        {
+            "ground_truth": "\u0c06\u0c38\u0c4d\u0c24\u0c3f\u0c15",
+            "prediction": "\u0c06\u0c38\u0c4d\u0c24\u0c3f\u0c15",
+            "correct": true,
+            "confidence": 0.5629028677940369
+        },
+        {
+            "ground_truth": "\u0c09\u0c02\u0c1a\u0c41\u0c15\u0c41\u0c28\u0c3f",
+            "prediction": "\u0c09\u0c02\u0c1a\u0c41\u0c15\u0c41\u0c28\u0c3f",
+            "correct": true,
+            "confidence": 0.3597179055213928
+        },
+        {
+            "ground_truth": "\u0c1a\u0c3f\u0c24\u0c4d\u0c30\u0c3f\u0c02\u0c1a\u0c32\u0c47\u0c26\u0c41",
+            "prediction": "\u0c1a\u0c3f\u0c24\u0c4d\u0c30\u0c3f\u0c02\u0c1a\u0c32\u0c47\u0c26\u0c41",
+            "correct": true,
+            "confidence": 0.9571865797042847
+        },
+        {
+            "ground_truth": "\u0c2d\u0c3e\u0c35\u0c4d\u0c2f\u0c2e\u0c3e",
+            "prediction": "\u0c2d\u0c3e\u0c35\u0c4d\u0c2f\u0c2e\u0c3e",
+            "correct": true,
+            "confidence": 0.9580902457237244
+        },
+        {
+            "ground_truth": "\u0c35\u0c3f\u0c15\u0c4d\u0c30\u0c2e\u0c3e\u0c30\u0c4d\u0c15\u0c41\u0c21\u0c3f\u0c32\u0c3e",
+            "prediction": "\u0c35\u0c3f\u0c15\u0c4d\u0c30\u0c2e\u0c3e\u0c30\u0c4d\u0c15\u0c41\u0c26\u0c3f\u0c32\u0c3e",
+            "correct": false,
+            "confidence": 0.5059524774551392
+        },
+        {
+            "ground_truth": "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c41\u0c15\u0c41\u0c02\u0c1f\u0c41\u0c02\u0c1f\u0c3e\u0c30\u0c41",
+            "prediction": "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c41\u0c15\u0c41\u0c02\u0c1f\u0c41\u0c02\u0c1f\u0c3e\u0c28\u0c41",
+            "correct": false,
+            "confidence": 0.43042007088661194
+        },
+        {
+            "ground_truth": "\u0c2a\u0c48\u0c2e\u0c3f\u0c36\u0c4d\u0c30\u0c2e\u0c02\u0c32\u0c4b",
+            "prediction": "\u0c2a\u0c3f\u0c2e\u0c3f\u0c36\u0c4d\u0c30\u0c2e\u0c02\u0c32\u0c3e",
+            "correct": false,
+            "confidence": 0.5105865001678467
+        },
+        {
+            "ground_truth": "\u0c35\u0c02\u0c1f\u0c3f\u0c2e\u0c40\u0c26",
+            "prediction": "\u0c35\u0c02\u0c1f\u0c40\u0c2e\u0c40\u0c26",
+            "correct": false,
+            "confidence": 0.39389568567276
+        },
+        {
+            "ground_truth": "\u0c2a\u0c4d\u0c30\u0c3e\u0c30\u0c02\u0c2d\u0c3f\u0c02\u0c1a\u0c02\u0c21\u0c3f",
+            "prediction": "\u0c2a\u0c4d\u0c30\u0c3e\u0c30\u0c02\u0c2d\u0c3f\u0c02\u0c1a\u0c02\u0c21\u0c3f",
+            "correct": true,
+            "confidence": 0.8711435794830322
+        },
+        {
+            "ground_truth": "\u0c26\u0c3f\u0c17\u0c1c\u0c3e\u0c30\u0c3f",
+            "prediction": "\u0c26\u0c3f\u0c17\u0c1c\u0c3e\u0c30\u0c3f",
+            "correct": true,
+            "confidence": 0.9106220006942749
+        },
+        {
+            "ground_truth": "\u0c24\u0c46\u0c17\u0c32\u0c35\u0c3e\u0c30\u0c41",
+            "prediction": "\u0c24\u0c46\u0c17\u0c32\u0c35\u0c3e\u0c30\u0c41",
+            "correct": true,
+            "confidence": 0.9457728266716003
+        },
+        {
+            "ground_truth": "\u0c17\u0c3f\u0c30\u0c3f\u0c1c\u0c28\u0c41\u0c32\u0c41",
+            "prediction": "\u0c17\u0c3f\u0c30\u0c3f\u0c1c\u0c28\u0c41\u0c32\u0c41",
+            "correct": true,
+            "confidence": 0.9377572536468506
+        },
+        {
+            "ground_truth": "\u0c15\u0c32\u0c4d\u0c2a\u0c2e\u0c41\u0c32\u0c41\u0c17\u0c3e\u0c28\u0c2e\u0c41",
+            "prediction": "\u0c15\u0c32\u0c4d\u0c1a\u0c2e\u0c41\u0c32\u0c41\u0c17\u0c3e\u0c28\u0c2e\u0c41",
+            "correct": false,
+            "confidence": 0.53216952085495
+        },
+        {
+            "ground_truth": "\u0c35\u0c3f\u0c27\u0c47\u0c2f\u0c24",
+            "prediction": "\u0c35\u0c3f\u0c27\u0c47\u0c2f\u0c24",
+            "correct": true,
+            "confidence": 0.8544520139694214
+        },
+        {
+            "ground_truth": "\u0c1a\u0c46\u0c02\u0c26\u0c3f\u0c28\u0c3e",
+            "prediction": "\u0c1a\u0c3f\u0c02\u0c26\u0c3f\u0c28\u0c3e",
+            "correct": false,
+            "confidence": 0.8039677739143372
+        },
+        {
+            "ground_truth": "\u0c2a\u0c47\u0c2a\u0c30\u0c4d\u0c32\u0c32\u0c4b",
+            "prediction": "\u0c2a\u0c47\u0c2a\u0c3f\u0c30\u0c4d\u0c32\u0c4b",
+            "correct": false,
+            "confidence": 0.544163167476654
+        },
+        {
+            "ground_truth": "\u0c35\u0c02\u0c26\u0c47\u0c33\u0c4d\u0c33",
+            "prediction": "\u0c35\u0c02\u0c26\u0c47\u0c33\u0c4d\u0c33",
+            "correct": true,
+            "confidence": 0.8823354244232178
+        },
+        {
+            "ground_truth": "\u0c38\u0c4b\u0c26\u0c30\u0c3e",
+            "prediction": "\u0c38\u0c4a\u0c26\u0c30\u0c3e",
+            "correct": false,
+            "confidence": 0.5355821847915649
+        },
+        {
+            "ground_truth": "\u0c28\u0c30\u0c15\u0c32\u0c4b\u0c15",
+            "prediction": "\u0c28\u0c30\u0c15\u0c32\u0c4b\u0c15",
+            "correct": true,
+            "confidence": 0.8442398905754089
+        },
+        {
+            "ground_truth": "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c3f\u0c26\u0c3f\u0c26\u0c4d\u0c26\u0c47",
+            "prediction": "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c3f\u0c26\u0c3f\u0c26\u0c4d\u0c26\u0c47",
+            "correct": true,
+            "confidence": 0.6113892197608948
+        }
+    ]
+}

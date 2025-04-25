@@ -1,0 +1,26 @@
+{
+    "aggregation_method": "min",
+    "Temperature Scaling": {
+        "temperature": 1.5789473684210527
+    },
+    "Step Dependent T-Scaling": {
+        "temperatures": [
+            0.8198572993278503,
+            1.0499999523162842,
+            1.100000023841858,
+            1.149999976158142,
+            1.0000032186508179,
+            1.0545997619628906,
+            1.1001650094985962,
+            1.1609435081481934,
+            1.2079627513885498,
+            1.4841859340667725,
+            1.5464893579483032
+        ],
+        "tau": 10
+    },
+    "MC Dropout": {
+        "num_samples": 30,
+        "note": "MC Dropout estimates only epistemic uncertainty, not aleatoric"
+    }
+}

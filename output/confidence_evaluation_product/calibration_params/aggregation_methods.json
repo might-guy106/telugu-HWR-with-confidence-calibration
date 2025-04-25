@@ -1,0 +1,6 @@
+{
+    "Uncalibrated": "product",
+    "Temperature Scaling": "product",
+    "Step Dependent T-Scaling": "product",
+    "MC Dropout": "product"
+}

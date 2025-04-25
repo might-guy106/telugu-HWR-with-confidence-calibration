@@ -1,0 +1,6 @@
+{
+    "Uncalibrated": "geometric_mean",
+    "Temperature Scaling": "geometric_mean",
+    "Step Dependent T-Scaling": "geometric_mean",
+    "MC Dropout": "geometric_mean"
+}

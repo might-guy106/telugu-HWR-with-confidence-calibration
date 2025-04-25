@@ -1,0 +1,89 @@
+{
+    "character_error_rate": 5.309264156863749,
+    "word_error_rate": 31.764377442769405,
+    "word_accuracy": 68.2356225572306,
+    "total_samples": 17910,
+    "correct_words": 12221,
+    "examples": [
+        {
+            "ground_truth": "ఆస్తిక",
+            "prediction": "ఆస్తిక"
+        },
+        {
+            "ground_truth": "ఉంచుకుని",
+            "prediction": "ఉంచుకుని"
+        },
+        {
+            "ground_truth": "చిత్రించలేదు",
+            "prediction": "చిత్రించలేదు"
+        },
+        {
+            "ground_truth": "భావ్యమా",
+            "prediction": "భావ్యమా"
+        },
+        {
+            "ground_truth": "విక్రమార్కుడిలా",
+            "prediction": "విక్రమార్కుదిలా"
+        },
+        {
+            "ground_truth": "తీర్చుకుంటుంటారు",
+            "prediction": "తీర్చుకుంటుంటాను"
+        },
+        {
+            "ground_truth": "పైమిశ్రమంలో",
+            "prediction": "పిమిశ్రమంలా"
+        },
+        {
+            "ground_truth": "వంటిమీద",
+            "prediction": "వంటీమీద"
+        },
+        {
+            "ground_truth": "ప్రారంభించండి",
+            "prediction": "ప్రారంభించండి"
+        },
+        {
+            "ground_truth": "దిగజారి",
+            "prediction": "దిగజారి"
+        },
+        {
+            "ground_truth": "తెగలవారు",
+            "prediction": "తెగలవారు"
+        },
+        {
+            "ground_truth": "గిరిజనులు",
+            "prediction": "గిరిజనులు"
+        },
+        {
+            "ground_truth": "కల్పములుగానము",
+            "prediction": "కల్చములుగానము"
+        },
+        {
+            "ground_truth": "విధేయత",
+            "prediction": "విధేయత"
+        },
+        {
+            "ground_truth": "చెందినా",
+            "prediction": "చిందినా"
+        },
+        {
+            "ground_truth": "పేపర్లలో",
+            "prediction": "పేపిర్లో"
+        },
+        {
+            "ground_truth": "వందేళ్ళ",
+            "prediction": "వందేళ్ళ"
+        },
+        {
+            "ground_truth": "సోదరా",
+            "prediction": "సొదరా"
+        },
+        {
+            "ground_truth": "నరకలోక",
+            "prediction": "నరకలోక"
+        },
+        {
+            "ground_truth": "తీర్చిదిద్దే",
+            "prediction": "తీర్చిదిద్దే"
+        }
+    ]
+}

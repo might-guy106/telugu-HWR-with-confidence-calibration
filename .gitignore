@@ -6,6 +6,6 @@ __pycache__/
 datasets/
 prompts/
 outputs/
-output/
+output/crnn
 webapp/static/uploads
 resources/

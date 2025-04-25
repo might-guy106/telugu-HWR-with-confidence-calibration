@@ -1,0 +1,6 @@
+{
+    "Uncalibrated": "min",
+    "Temperature Scaling": "min",
+    "Step Dependent T-Scaling": "min",
+    "MC Dropout": "min"
+}

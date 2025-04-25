@@ -1,0 +1,226 @@
+{
+    "method": "MC Dropout",
+    "aggregation_method": "product",
+    "accuracy": 68.16303740926857,
+    "ece": 0.08874361907546614,
+    "mce": 0.17938518074565918,
+    "brier_score": 0.18607735162565014,
+    "examples": [
+        {
+            "ground_truth": "\u0c06\u0c38\u0c4d\u0c24\u0c3f\u0c15",
+            "prediction": "\u0c06\u0c38\u0c4d\u0c24\u0c3f\u0c15",
+            "correct": true,
+            "confidence": 0.3756289482116699,
+            "epistemic_uncertainty": 7.488486880902201e-05,
+            "prediction_distribution": {
+                "\u0c06\u0c38\u0c4d\u0c24\u0c3f\u0c15": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c09\u0c02\u0c1a\u0c41\u0c15\u0c41\u0c28\u0c3f",
+            "prediction": "\u0c09\u0c02\u0c1a\u0c41\u0c2e\u0c41\u0c28\u0c3f",
+            "correct": false,
+            "confidence": 0.29510295391082764,
+            "epistemic_uncertainty": 1.665194758970756e-05,
+            "prediction_distribution": {
+                "\u0c09\u0c02\u0c1a\u0c41\u0c2e\u0c41\u0c28\u0c3f": 21,
+                "\u0c09\u0c02\u0c1a\u0c41\u0c2e\u0c28\u0c3f": 2,
+                "\u0c09\u0c02\u0c1a\u0c41\u0c15\u0c41\u0c28\u0c3f": 6,
+                "\u0c09\u0c02\u0c1a\u0c41\u0c2e\u0c47\u0c28\u0c3f": 1
+            }
+        },
+        {
+            "ground_truth": "\u0c1a\u0c3f\u0c24\u0c4d\u0c30\u0c3f\u0c02\u0c1a\u0c32\u0c47\u0c26\u0c41",
+            "prediction": "\u0c1a\u0c3f\u0c24\u0c4d\u0c30\u0c3f\u0c02\u0c1a\u0c32\u0c47\u0c26\u0c41",
+            "correct": true,
+            "confidence": 0.9378436207771301,
+            "epistemic_uncertainty": 6.156903396004054e-07,
+            "prediction_distribution": {
+                "\u0c1a\u0c3f\u0c24\u0c4d\u0c30\u0c3f\u0c02\u0c1a\u0c32\u0c47\u0c26\u0c41": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c2d\u0c3e\u0c35\u0c4d\u0c2f\u0c2e\u0c3e",
+            "prediction": "\u0c2d\u0c3e\u0c35\u0c4d\u0c2f\u0c2e\u0c3e",
+            "correct": true,
+            "confidence": 0.9700483083724976,
+            "epistemic_uncertainty": 2.552593230120692e-07,
+            "prediction_distribution": {
+                "\u0c2d\u0c3e\u0c35\u0c4d\u0c2f\u0c2e\u0c3e": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c35\u0c3f\u0c15\u0c4d\u0c30\u0c2e\u0c3e\u0c30\u0c4d\u0c15\u0c41\u0c21\u0c3f\u0c32\u0c3e",
+            "prediction": "\u0c35\u0c3f\u0c15\u0c4d\u0c30\u0c2e\u0c3e\u0c30\u0c4d\u0c15\u0c41\u0c26\u0c3f\u0c32\u0c3e",
+            "correct": false,
+            "confidence": 0.17404361069202423,
+            "epistemic_uncertainty": 0.00010837930312845856,
+            "prediction_distribution": {
+                "\u0c35\u0c3f\u0c15\u0c4d\u0c30\u0c2e\u0c3e\u0c30\u0c4d\u0c15\u0c41\u0c26\u0c3f\u0c32\u0c3e": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c41\u0c15\u0c41\u0c02\u0c1f\u0c41\u0c02\u0c1f\u0c3e\u0c30\u0c41",
+            "prediction": "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c41\u0c15\u0c41\u0c02\u0c1f\u0c41\u0c02\u0c1f\u0c3e\u0c28\u0c41",
+            "correct": false,
+            "confidence": 0.16389234364032745,
+            "epistemic_uncertainty": 3.5523713449947536e-05,
+            "prediction_distribution": {
+                "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c41\u0c15\u0c41\u0c02\u0c1f\u0c41\u0c02\u0c1f\u0c3e\u0c28\u0c41": 25,
+                "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c41\u0c2e\u0c41\u0c02\u0c1f\u0c41\u0c02\u0c1f\u0c3e\u0c28\u0c41": 2,
+                "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c41\u0c24\u0c41\u0c02\u0c1f\u0c41\u0c02\u0c1f\u0c3e\u0c28\u0c41": 2,
+                "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c41\u0c15\u0c41\u0c02\u0c1f\u0c41\u0c02\u0c1f\u0c3e\u0c26\u0c41": 1
+            }
+        },
+        {
+            "ground_truth": "\u0c2a\u0c48\u0c2e\u0c3f\u0c36\u0c4d\u0c30\u0c2e\u0c02\u0c32\u0c4b",
+            "prediction": "\u0c2a\u0c3f\u0c2e\u0c3f\u0c36\u0c4d\u0c30\u0c2e\u0c02\u0c32\u0c3e",
+            "correct": false,
+            "confidence": 0.04108387231826782,
+            "epistemic_uncertainty": 0.00011130401981063187,
+            "prediction_distribution": {
+                "\u0c2a\u0c3f\u0c2e\u0c3f\u0c36\u0c4d\u0c30\u0c2e\u0c02\u0c32\u0c3e": 12,
+                "\u0c2b\u0c3f\u0c2e\u0c3f\u0c36\u0c4d\u0c30\u0c2e\u0c02\u0c32\u0c3e": 8,
+                "\u0c2a\u0c48\u0c2e\u0c3f\u0c36\u0c4d\u0c30\u0c2e\u0c02\u0c32\u0c3e": 2,
+                "\u0c2b\u0c48\u0c2e\u0c3f\u0c36\u0c4d\u0c30\u0c2e\u0c02\u0c32\u0c3e": 7,
+                "\u0c2a\u0c48\u0c3f\u0c2e\u0c3f\u0c36\u0c4d\u0c30\u0c2e\u0c02\u0c32\u0c3e": 1
+            }
+        },
+        {
+            "ground_truth": "\u0c35\u0c02\u0c1f\u0c3f\u0c2e\u0c40\u0c26",
+            "prediction": "\u0c35\u0c02\u0c1f\u0c40\u0c2e\u0c40\u0c26",
+            "correct": false,
+            "confidence": 0.4628998339176178,
+            "epistemic_uncertainty": 9.80663753580302e-06,
+            "prediction_distribution": {
+                "\u0c35\u0c02\u0c1f\u0c47\u0c2e\u0c40\u0c26": 14,
+                "\u0c35\u0c02\u0c1f\u0c40\u0c2e\u0c40\u0c26": 16
+            }
+        },
+        {
+            "ground_truth": "\u0c2a\u0c4d\u0c30\u0c3e\u0c30\u0c02\u0c2d\u0c3f\u0c02\u0c1a\u0c02\u0c21\u0c3f",
+            "prediction": "\u0c2a\u0c4d\u0c30\u0c3e\u0c30\u0c02\u0c2d\u0c3f\u0c02\u0c1a\u0c02\u0c21\u0c3f",
+            "correct": true,
+            "confidence": 0.8868228793144226,
+            "epistemic_uncertainty": 4.013705165561987e-06,
+            "prediction_distribution": {
+                "\u0c2a\u0c4d\u0c30\u0c3e\u0c30\u0c02\u0c2d\u0c3f\u0c02\u0c1a\u0c02\u0c21\u0c3f": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c26\u0c3f\u0c17\u0c1c\u0c3e\u0c30\u0c3f",
+            "prediction": "\u0c26\u0c3f\u0c17\u0c1c\u0c3e\u0c30\u0c3f",
+            "correct": true,
+            "confidence": 0.8236773610115051,
+            "epistemic_uncertainty": 2.406286512268707e-05,
+            "prediction_distribution": {
+                "\u0c26\u0c3f\u0c17\u0c1c\u0c3e\u0c30\u0c3f": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c24\u0c46\u0c17\u0c32\u0c35\u0c3e\u0c30\u0c41",
+            "prediction": "\u0c24\u0c46\u0c17\u0c32\u0c35\u0c3e\u0c30\u0c41",
+            "correct": true,
+            "confidence": 0.9506011009216309,
+            "epistemic_uncertainty": 8.161525215655274e-07,
+            "prediction_distribution": {
+                "\u0c24\u0c46\u0c17\u0c32\u0c35\u0c3e\u0c30\u0c41": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c17\u0c3f\u0c30\u0c3f\u0c1c\u0c28\u0c41\u0c32\u0c41",
+            "prediction": "\u0c17\u0c3f\u0c30\u0c3f\u0c1c\u0c28\u0c41\u0c32\u0c41",
+            "correct": true,
+            "confidence": 0.9398652911186218,
+            "epistemic_uncertainty": 1.5501311736443313e-06,
+            "prediction_distribution": {
+                "\u0c17\u0c3f\u0c30\u0c3f\u0c1c\u0c28\u0c41\u0c32\u0c41": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c15\u0c32\u0c4d\u0c2a\u0c2e\u0c41\u0c32\u0c41\u0c17\u0c3e\u0c28\u0c2e\u0c41",
+            "prediction": "\u0c15\u0c32\u0c4d\u0c1a\u0c2e\u0c41\u0c32\u0c41\u0c17\u0c3e\u0c28\u0c2e\u0c41",
+            "correct": false,
+            "confidence": 0.526423454284668,
+            "epistemic_uncertainty": 2.2334084860631265e-05,
+            "prediction_distribution": {
+                "\u0c15\u0c32\u0c4d\u0c1a\u0c2e\u0c41\u0c32\u0c41\u0c17\u0c3e\u0c28\u0c2e\u0c41": 28,
+                "\u0c15\u0c32\u0c4d\u0c2a\u0c2e\u0c41\u0c32\u0c41\u0c17\u0c3e\u0c28\u0c2e\u0c41": 1,
+                "\u0c15\u0c32\u0c4d\u0c2f\u0c2e\u0c41\u0c32\u0c41\u0c17\u0c3e\u0c28\u0c2e\u0c41": 1
+            }
+        },
+        {
+            "ground_truth": "\u0c35\u0c3f\u0c27\u0c47\u0c2f\u0c24",
+            "prediction": "\u0c35\u0c3f\u0c27\u0c47\u0c2f\u0c24",
+            "correct": true,
+            "confidence": 0.8993925452232361,
+            "epistemic_uncertainty": 1.068384563041036e-06,
+            "prediction_distribution": {
+                "\u0c35\u0c3f\u0c27\u0c47\u0c2f\u0c24": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c1a\u0c46\u0c02\u0c26\u0c3f\u0c28\u0c3e",
+            "prediction": "\u0c1a\u0c3f\u0c02\u0c26\u0c3f\u0c28\u0c3e",
+            "correct": false,
+            "confidence": 0.7553914785385132,
+            "epistemic_uncertainty": 3.7356785469455644e-05,
+            "prediction_distribution": {
+                "\u0c1a\u0c3f\u0c02\u0c26\u0c3f\u0c28\u0c3e": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c2a\u0c47\u0c2a\u0c30\u0c4d\u0c32\u0c32\u0c4b",
+            "prediction": "\u0c2a\u0c47\u0c2a\u0c3f\u0c30\u0c4d\u0c32\u0c4b",
+            "correct": false,
+            "confidence": 0.12848733365535736,
+            "epistemic_uncertainty": 8.324810187332332e-05,
+            "prediction_distribution": {
+                "\u0c2a\u0c47\u0c2a\u0c3f\u0c30\u0c4d\u0c32\u0c4b": 18,
+                "\u0c2a\u0c47\u0c2a\u0c30\u0c4d\u0c32\u0c4b": 6,
+                "\u0c2a\u0c47\u0c2a\u0c3f\u0c30\u0c4d\u0c32": 6
+            }
+        },
+        {
+            "ground_truth": "\u0c35\u0c02\u0c26\u0c47\u0c33\u0c4d\u0c33",
+            "prediction": "\u0c35\u0c02\u0c26\u0c47\u0c33\u0c4d\u0c33",
+            "correct": true,
+            "confidence": 0.8533433675765991,
+            "epistemic_uncertainty": 9.13555413717404e-06,
+            "prediction_distribution": {
+                "\u0c35\u0c02\u0c26\u0c47\u0c33\u0c4d\u0c33": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c38\u0c4b\u0c26\u0c30\u0c3e",
+            "prediction": "\u0c38\u0c4a\u0c26\u0c30\u0c3e",
+            "correct": false,
+            "confidence": 0.5091491937637329,
+            "epistemic_uncertainty": 1.6620935639366508e-05,
+            "prediction_distribution": {
+                "\u0c38\u0c4a\u0c26\u0c30\u0c3e": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c28\u0c30\u0c15\u0c32\u0c4b\u0c15",
+            "prediction": "\u0c28\u0c30\u0c15\u0c32\u0c4b\u0c15",
+            "correct": true,
+            "confidence": 0.9063257575035095,
+            "epistemic_uncertainty": 2.1465202735271305e-06,
+            "prediction_distribution": {
+                "\u0c28\u0c30\u0c15\u0c32\u0c4b\u0c15": 30
+            }
+        },
+        {
+            "ground_truth": "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c3f\u0c26\u0c3f\u0c26\u0c4d\u0c26\u0c47",
+            "prediction": "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c3f\u0c26\u0c3f\u0c26\u0c4d\u0c26\u0c47",
+            "correct": true,
+            "confidence": 0.33824247121810913,
+            "epistemic_uncertainty": 5.020709795644507e-05,
+            "prediction_distribution": {
+                "\u0c24\u0c40\u0c30\u0c4d\u0c1a\u0c3f\u0c26\u0c3f\u0c26\u0c4d\u0c26\u0c47": 26,
+                "\u0c24\u0c47\u0c30\u0c4d\u0c1a\u0c3f\u0c26\u0c3f\u0c26\u0c4d\u0c26\u0c47": 4
+            }
+        }
+    ]
+}
