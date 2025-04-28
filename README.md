@@ -126,6 +126,16 @@ print(f'Created vocabulary with {len(vocab)} characters')
 "
 ```
 
+## Pretrained Models
+
+Pretrained models are available for immediate use. You can download them from Hugging Face:
+
+```bash
+https://huggingface.co/mightguy106/CRNN_Telugu_HWR/tree/main/output/crnn
+```
+
+Download the model files and place them in the appropriate directory structure (e.g., `output/crnn/`) to use them directly with the evaluation scripts or web application.
+
 ## Training
 
 ### CRNN Model
@@ -217,4 +227,3 @@ python run_webapp.py
 ## Acknowledgements
 
 - This project was developed as part of research on handwriting recognition with confidence calibration.
-
