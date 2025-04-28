@@ -188,6 +188,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (previewImage.src.startsWith("data:image")) {
       // It's a data URL, extract the base64 data
       formData.append("image_data", previewImage.src);
+
+      // Add confidence method and aggregation method
+      formData.append("confidence_method", method);
+      formData.append("aggregation_method", aggMethod);
+
+      // Send request
+      sendRecognizeRequest(formData);
     } else {
       // Convert the image to a blob
       fetch(previewImage.src)
@@ -195,24 +202,21 @@ document.addEventListener("DOMContentLoaded", function () {
         .then((blob) => {
           const file = new File([blob], "image.png", { type: "image/png" });
           formData.append("image", file);
-          sendRecognizeRequest(formData, method);
+
+          // Add confidence method and aggregation method HERE inside this async flow
+          formData.append("confidence_method", method);
+          formData.append("aggregation_method", aggMethod);
+
+          sendRecognizeRequest(formData);
         })
         .catch((error) => {
           console.error("Error fetching image:", error);
           showError("Error processing image");
         });
-      return;
     }
-
-    // Add confidence method
-    formData.append("confidence_method", method);
-    formData.append("aggregation_method", aggMethod);
-
-    // Send request
-    sendRecognizeRequest(formData, method);
   }
 
-  function sendRecognizeRequest(formData, method) {
+  function sendRecognizeRequest(formData) {
     fetch("/api/recognize", {
       method: "POST",
       body: formData,
@@ -244,7 +248,14 @@ document.addEventListener("DOMContentLoaded", function () {
     // Now get the recognition results
     showLoading();
 
-    fetch(`/api/sample/${filename}`)
+    // Get the selected confidence method and aggregation method
+    const method = confidenceMethod.value;
+    const aggMethod = document.getElementById("aggregation-method").value;
+
+    // Add query parameters to the URL
+    fetch(
+      `/api/sample/${filename}?confidence_method=${method}&aggregation_method=${aggMethod}`,
+    )
       .then((response) => {
         if (!response.ok) {
           throw new Error("Network response was not ok");

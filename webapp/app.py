@@ -93,8 +93,17 @@ def get_sample(filename):
         if not os.path.exists(filepath):
             return jsonify({'error': 'Sample not found'}), 404
 
+        # Get parameters from query string
+        confidence_method = request.args.get('confidence_method', 'step_dependent')
+        aggregation_method = request.args.get('aggregation_method', 'geometric_mean')
+
         image = Image.open(filepath).convert('L')
-        result = model_manager.recognize(image)
+        # Pass the parameters to recognize method
+        result = model_manager.recognize(
+            image,
+            method=confidence_method,
+            agg_method=aggregation_method
+        )
 
         # Add the sample image path
         result['image_url'] = f"/static/samples/{filename}"
