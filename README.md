@@ -1,6 +1,6 @@
 # Telugu Handwriting Recognition with Confidence Calibration
 
-This repository contains an end-to-end system for Telugu handwritten word recognition with confidence calibration. The system supports multiple model architectures (CRNN and PARSeq) and various confidence estimation techniques.
+This repository contains an end-to-end system for Telugu handwritten word recognition with confidence calibration. The system supports multiple model architectures (CRNN and PARSeq) and various confidence estimation techniques. It includes a web interface for interactive demonstrations.
 
 ## Project Structure
 
@@ -15,9 +15,7 @@ telugu-hwr/
 │   ├── components/            # Model building blocks
 │   │   ├── rnn.py             # RNN modules
 │   │   └── ...                # Other components
-│   ├── crnn.py                # CRNN model
-│   ├── mc_dropout_crnn.py     # CRNN with Monte Carlo dropout
-│   └── parseq.py              # PARSeq model
+│   └── crnn.py                # CRNN model
 │
 ├── confidence_v2/             # Enhanced confidence estimation methods
 │   ├── base.py                # Base confidence estimator
@@ -30,35 +28,45 @@ telugu-hwr/
 ├── utils/                     # Utility functions
 │   ├── ctc_decoder.py         # CTC decoder
 │   ├── metrics.py             # Evaluation metrics
-│   ├── tokenizer.py           # Tokenizer for PARSeq model
 │   └── visualization.py       # Result visualization utilities
 │
 ├── trainers/                  # Model trainers
 │   ├── base_trainer.py        # Base trainer
-│   ├── crnn_trainer.py        # CRNN model trainer
-│   └── parseq_trainer.py      # PARSeq model trainer
+│   └── crnn_trainer.py        # CRNN model trainer
 │
 ├── scripts/                   # Training and evaluation scripts
 │   ├── train_crnn.py          # Train CRNN model
-│   ├── train_parseq.py        # Train PARSeq model
 │   ├── evaluate.py            # Evaluate models
-│   ├── evaluate_confidence_v2.py # Enhanced confidence evaluation
-│   └── test_structure.py      # Test code structure functionality
+│   └── evaluate_confidence.py # Confidence evaluation
 │
-└── requirements.txt           # Project dependencies
+├── webapp/                    # Web application for demonstration
+│   ├── static/                # Static assets (JS, CSS, images)
+│   ├── templates/             # HTML templates
+│   ├── utils/                 # Webapp utilities
+│   ├── app.py                 # Flask web server
+│   └── model_manager.py       # Model management for webapp
+│
+├── run_webapp.py              # Script to run the web application
+├── requirements.txt           # Project dependencies
+├── requirements_webapp.txt    # Webapp-specific dependencies
+└── README.md                  # Project documentation
 ```
 
 ## Key Features
 
 - **Multiple Model Architectures**:
   - CRNN with CTC loss for sequence recognition
-  - PARSeq (Permuted Autoregressive Sequence) model with transformer architecture
 
 - **Advanced Confidence Calibration**:
   - Temperature Scaling for basic calibration
-  - Monte Carlo Dropout for uncertainty estimation
+  - Monte Carlo Dropout for uncertainty estimation (epistemic and aleatoric)
   - Step-Dependent Temperature Scaling for position-specific calibration
-  - Length-normalized confidence scores (geometric mean) for better sequence confidence
+  - Length-normalized confidence scores for better sequence confidence
+
+- **Confidence Aggregation Methods**:
+  - Geometric Mean (Length-normalized)
+  - Product (Unnormalized)
+  - Minimum (Pessimistic)
 
 - **Comprehensive Evaluation**:
   - Character Error Rate (CER) and Word Error Rate (WER) metrics
@@ -66,17 +74,27 @@ telugu-hwr/
   - Brier Score for probabilistic assessment
   - Visualization tools for calibration analysis
 
+- **Interactive Web Application**:
+  - Upload or capture handwritten text images
+  - Real-time recognition with confidence visualization
+  - Selection of different confidence calibration methods
+  - Character-level confidence heatmaps
+
 ## Setup
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/telugu-hwr.git
-cd telugu-hwr
+git clone git@github.com:might-guy106/telugu-HWR-with-confidence-calibration.git
 ```
 
 2. Install dependencies:
 ```bash
 pip install -r requirements.txt
+```
+
+3. Install webapp-specific dependencies:
+```bash
+pip install -r requirements_webapp.txt
 ```
 
 ## Data Preparation
@@ -85,6 +103,28 @@ The system expects data in the following format:
 
 - A text file with lines in the format: `image_path label`
 - Images should be in the directory specified by `data_root`
+
+## Creating a Vocabulary File
+
+If you don't have a vocabulary file, you can generate one from your dataset using the data analysis tools:
+
+```bash
+python -c "
+from data.dataset import TeluguHWRDataset
+from data.analysis import analyze_dataset
+import os
+
+data_root = '/path/to/dataset'
+train_dataset = TeluguHWRDataset(
+    data_file=os.path.join(data_root, 'train.txt'),
+    root_dir=data_root,
+    transform=None
+)
+
+vocab = analyze_dataset(train_dataset, save_dir='output')
+print(f'Created vocabulary with {len(vocab)} characters')
+"
+```
 
 ## Training
 
@@ -146,91 +186,35 @@ After running the evaluation scripts, you can find various visualizations in the
 - **Position-specific Temperature Values**: For Step-Dependent Temperature Scaling
 - **Calibration Comparison**: Comparing different calibration methods
 
-## Creating a Vocabulary File
+## Web Application
 
-If you don't have a vocabulary file, you can generate one from your dataset using the data analysis tools:
+The project includes a web application for interactive demonstrations:
 
 ```bash
-python -c "
-from data.dataset import TeluguHWRDataset
-from data.analysis import analyze_dataset
-import os
-
-data_root = '/path/to/dataset'
-train_dataset = TeluguHWRDataset(
-    data_file=os.path.join(data_root, 'train.txt'),
-    root_dir=data_root,
-    transform=None
-)
-
-vocab = analyze_dataset(train_dataset, save_dir='output')
-print(f'Created vocabulary with {len(vocab)} characters')
-"
+python run_webapp.py
 ```
+
+### Web Interface Features:
+
+1. **Image Upload**: Upload Telugu handwritten images or use sample images
+2. **Camera Capture**: Capture images directly from your device's camera
+3. **Recognition Settings**: 
+   - Choose different confidence estimation methods:
+     - Step-Dependent Temperature Scaling
+     - Temperature Scaling
+     - Monte Carlo Dropout
+     - Uncalibrated (raw softmax probabilities)
+   - Select confidence aggregation methods:
+     - Minimum
+     - Geometric Mean
+     - Product
+4. **Results Display**:
+   - Recognized Telugu text
+   - Overall confidence score with color-coded indicator
+   - Character-level confidence heatmap
+   - Method-specific details for the selected confidence estimation approach
 
 ## Acknowledgements
 
 - This project was developed as part of research on handwriting recognition with confidence calibration.
-- The PARSeq implementation is based on the paper "Scene Text Recognition with Permuted Autoregressive Sequence Models" by Bautista et al.
-```
 
-
-## Temporary
-
-```bash
-python scripts/train_crnn.py \
-    --data_root "/home/GNN-NIDS/pankaj/telugu-hwr/datasets/telugu datset" \
-    --train_file train.txt \
-    --val_file val.txt \
-    --vocab_file output/vocabulary.txt \
-    --output_dir output/crnn \
-    --img_height 64 \
-    --img_width 256 \
-    --batch_size 32 \
-    --epochs 20 \
-    --learning_rate 0.001 \
-    --cuda
-```
-```bash
-python scripts/train_trocr.py \
-    --data_root "/home/GNN-NIDS/pankaj/telugu-hwr/datasets/telugu datset" \
-    --train_file train.txt \
-    --val_file val.txt \
-    --output_dir output/trocr \
-    --pretrained_model "microsoft/trocr-base-handwritten" \
-    --img_height 384 \
-    --img_width 384 \
-    --batch_size 32 \
-    --max_samples 1000 \
-    --val_samples 200 \
-    --epochs 10 \
-    --learning_rate 5e-5 \
-    --cuda
-```
-
-```bash
-python scripts/evaluate.py \
-    --data_root "/home/GNN-NIDS/pankaj/telugu-hwr/datasets/telugu datset" \
-    --test_file test.txt \
-    --vocab_file output/vocabulary.txt \
-    --model_path output/crnn/best_cer_model.pth \
-    --model_type crnn \
-    --output_dir output/evaluation/crnn \
-    --cuda
-```
-
-```bash
-python scripts/evaluate_confidence.py \
-    --data_root "/home/GNN-NIDS/pankaj/telugu-hwr/datasets/telugu datset" \
-    --val_file val.txt \
-    --test_file test.txt \
-    --vocab_file output/vocabulary.txt \
-    --model_path output/crnn/best_cer_model.pth \
-    --output_dir output/confidence_evaluation_min \
-    --batch_size 32 \
-    --test_samples 1000 \
-    --val_samples 1000 \
-    --num_samples 30 \
-    --agg_method min \
-    --cuda
-```
