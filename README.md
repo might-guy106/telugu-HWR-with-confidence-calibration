@@ -87,14 +87,10 @@ telugu-hwr/
 git clone git@github.com:might-guy106/telugu-HWR-with-confidence-calibration.git
 ```
 
-2. Install dependencies:
+2. Create and activate the Conda environment:
 ```bash
-pip install -r requirements.txt
-```
-
-3. Install webapp-specific dependencies:
-```bash
-pip install -r requirements_webapp.txt
+conda env create -f environment.yml
+conda activate 698r
 ```
 
 ## Data Preparation
@@ -208,7 +204,7 @@ python run_webapp.py
 
 1. **Image Upload**: Upload Telugu handwritten images or use sample images
 2. **Camera Capture**: Capture images directly from your device's camera
-3. **Recognition Settings**: 
+3. **Recognition Settings**:
    - Choose different confidence estimation methods:
      - Step-Dependent Temperature Scaling
      - Temperature Scaling
