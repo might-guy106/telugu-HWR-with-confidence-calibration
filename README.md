@@ -222,4 +222,4 @@ python run_webapp.py
 
 ## Acknowledgements
 
-- This project was developed as part of research on handwriting recognition with confidence calibration.
+- This project was developed as part of EE698R course project.
